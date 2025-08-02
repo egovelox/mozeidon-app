@@ -1,0 +1,85 @@
+export const GET_BOOKMARKS_COMMAND = "bookmarks -m 100000 -c 200"
+export const GET_HISTORY_COMMAND = "history -m 100000 -c 200"
+export const CREATE_BOOKMARK_COMMAND = "bookmark new"
+export const UPDATE_BOOKMARK_COMMAND = "bookmark update"
+export const GET_TABS_AND_GROUPS_COMMAND =
+  "tabs get --latest-first=false --with-groups"
+export const GET_TABS_COMMAND = "tabs get"
+export const OPEN_NEW_TAB_COMMAND = "tabs new"
+export const GET_RECENTLY_CLOSED_COMMAND = "tabs get -c"
+export const SWITCH_TAB_COMMAND = "tabs switch"
+export const CLOSE_TAB_COMMAND = "tabs close"
+export const UPDATE_TAB_COMMAND = "tabs update"
+export const DUPLICATE_TAB_COMMAND = "tabs duplicate"
+export const DELETE_BOOKMARK_COMMAND = "bookmark delete"
+export const DELETE_HISTORY_COMMAND = "history delete"
+export const UPDATE_TABGROUP_COMMAND = "groups update"
+export const NEW_TABGROUP_COMMAND = "tabs init-group"
+
+export const FAVICON_PROVIDER_URL = "https://www.google.com/s2/favicons"
+
+export const AUTO_CONFIGURED_BROWSERS = ["firefox", "chrome", "edge"]
+export const BROWSER_NATIVE_MESSAGING_DIR = "NativeMessagingHosts"
+
+export const FILE_PREFIX_URL = "file://"
+export const INACTIVE_SHORTCUT_VALUE = "" as const
+export const LIST_CONTAINER_HEIGHT = 404
+
+export const SHORTCUT_HIDE_PANEL = "Escape"
+export const SHORTCUT_LIST_DOWN = "ArrowDown"
+export const SHORTCUT_LIST_UP = "ArrowUp"
+
+export enum Context {
+  None = "none",
+  Bookmarks = "bookmarks",
+  History = "history",
+  Tabs = "tabs",
+  RecentlyClosed = "recently closed tabs",
+  Settings = "settings",
+}
+
+export enum RowDisplay {
+  MultiLine = "multi-line",
+  OneLine = "one-line",
+}
+
+export const MULTILINE_ITEM_SIZE = 80
+export const ONELINE_ITEM_SIZE = 33
+const BEGIN_LIST_Y = 60
+
+const MVIEWPORT_Y_ITEM1 = BEGIN_LIST_Y + MULTILINE_ITEM_SIZE
+const MVIEWPORT_Y_ITEM2 = MVIEWPORT_Y_ITEM1 + MULTILINE_ITEM_SIZE
+const MVIEWPORT_Y_ITEM3 = MVIEWPORT_Y_ITEM1 + MULTILINE_ITEM_SIZE * 2
+const MVIEWPORT_Y_ITEM4 = MVIEWPORT_Y_ITEM1 + MULTILINE_ITEM_SIZE * 3
+
+const OVIEWPORT_Y_ITEM1 = BEGIN_LIST_Y + ONELINE_ITEM_SIZE
+const OVIEWPORT_Y_ITEM2 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE
+const OVIEWPORT_Y_ITEM3 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 2
+const OVIEWPORT_Y_ITEM4 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 3
+const OVIEWPORT_Y_ITEM5 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 4
+const OVIEWPORT_Y_ITEM6 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 5
+const OVIEWPORT_Y_ITEM7 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 6
+const OVIEWPORT_Y_ITEM8 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 7
+const OVIEWPORT_Y_ITEM9 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 8
+const OVIEWPORT_Y_ITEM10 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 9
+const OVIEWPORT_Y_ITEM11 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 10
+
+export const M_THRESHOLDS = [
+  MVIEWPORT_Y_ITEM1,
+  MVIEWPORT_Y_ITEM2,
+  MVIEWPORT_Y_ITEM3,
+  MVIEWPORT_Y_ITEM4,
+]
+export const O_THRESHOLDS = [
+  OVIEWPORT_Y_ITEM1,
+  OVIEWPORT_Y_ITEM2,
+  OVIEWPORT_Y_ITEM3,
+  OVIEWPORT_Y_ITEM4,
+  OVIEWPORT_Y_ITEM5,
+  OVIEWPORT_Y_ITEM6,
+  OVIEWPORT_Y_ITEM7,
+  OVIEWPORT_Y_ITEM8,
+  OVIEWPORT_Y_ITEM9,
+  OVIEWPORT_Y_ITEM10,
+  OVIEWPORT_Y_ITEM11,
+]

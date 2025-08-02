@@ -1,0 +1,760 @@
+:root {
+  /*font-family: Inter, Avenir, Helvetica, Arial, sans-serif;*/
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  --main-font-weight: 400;
+  --enlarged-font-weight: 500;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  --main-font-color: #2e2e2e;
+  --main-background-color: #EDEFF1;
+  --selected-background-color: #D9D1C9;
+  --selected-input-background-color: #FAFAFA;
+  --button-border-color: rgba(28, 27, 26, 0.2);
+  --app-border-color: rgba(28, 27, 26, 0.2);
+  --loading-glow-color: #000000;
+  --light-orange: #ed7647;
+  --scrollbar-orange: #d9744e;
+  --button-focus-filter: brightness(90%) contrast(80%);
+  --button-box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
+  --row-button-focus-background-color: #ed7647;
+  --highlight-box-shadow: 0px 0px 2px var(--light-orange), 0px 0px 4px var(--light-orange);
+  --selected-actions-view-row: var(--selected-background-color);
+  --tab-group-font-color-blue: #2152c4;
+  --tab-group-font-color-cyan: #32758f;
+  --tab-group-font-color-purple: #7b2ea1;
+  --tab-group-font-color-yellow: #8f591c;
+  --tab-group-font-color-pink: #9e1f58;
+  --tab-group-font-color-grey: #606a75;
+  --tab-group-font-color-green: #33751f;
+  --tab-group-font-color-orange: #9f3017;
+  --tab-group-font-color-red: #a3203a;
+  --tab-group-color-blue: #93c5fa;
+  --tab-group-color-cyan: #83dae7;
+  --tab-group-color-purple: #e0aefa;
+  --tab-group-color-yellow: #eecd6c;
+  --tab-group-color-pink: #f2a3c3;
+  --tab-group-color-grey: #9ba6b3;
+  --tab-group-color-green: #9ddd95;
+  --tab-group-color-orange: #f4b883;
+  --tab-group-color-red: #f2a4aa;
+}
+
+:root[data-theme="light"] {
+  /* optional: the light is all what is declared above override if needed */
+}
+
+:root[data-theme="dark"] {
+  --main-font-color: #b0b0b0;
+  /*--main-font-color: #8d948e;*/
+  --button-border-color: #3a3a3a;
+  --main-background-color: #252525;
+  --selected-input-background-color: #212121;
+  --selected-background-color: #3b3b3b;
+  --loading-glow-color: #a6a6a6;
+  --button-focus-filter: brightness(120%) contrast(80%);
+  --app-border-color: rgba(255, 255, 255, 0.15);
+  --selected-actions-view-row: #1f1f1f;
+  --scrollbar-orange: #82452e;
+  --tab-group-color-blue: #2152c4;
+  --tab-group-color-cyan: #32758f;
+  --tab-group-color-purple: #7b2ea1;
+  --tab-group-color-yellow: #8f591c;
+  --tab-group-color-pink: #9e1f58;
+  --tab-group-color-grey: #606a75;
+  --tab-group-color-green: #33751f;
+  --tab-group-color-orange: #9f3017;
+  --tab-group-color-red: #a3203a;
+  --tab-group-font-color-blue: #93c5fa;
+  --tab-group-font-color-cyan: #83dae7;
+  --tab-group-font-color-purple: #e0aefa;
+  --tab-group-font-color-yellow: #eecd6c;
+  --tab-group-font-color-pink: #f2a3c3;
+  --tab-group-font-color-grey: #9ba6b3;
+  --tab-group-font-color-green: #9ddd95;
+  --tab-group-font-color-orange: #f4b883;
+  --tab-group-font-color-red: #f2a4aa;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* will apply only if the user settings have a theme: system */
+  :root:not([data-theme]) {
+    --main-font-color: #b0b0b0;
+    --button-border-color: #3a3a3a;
+    --main-background-color: #252525;
+    --selected-background-color: #3b3b3b;
+    --selected-input-background-color: #212121;
+    --loading-glow-color: #a6a6a6;
+    --button-focus-filter: brightness(120%) contrast(80%);
+    --app-border-color: rgba(255, 255, 255, 0.15);
+    --scrollbar-orange: #82452e;
+    --selected-actions-view-row: #1f1f1f;
+    --tab-group-color-blue: #2152c4;
+    --tab-group-color-cyan: #32758f;
+    --tab-group-color-purple: #7b2ea1;
+    --tab-group-color-yellow: #8f591c;
+    --tab-group-color-pink: #9e1f58;
+    --tab-group-color-grey: #606a75;
+    --tab-group-color-green: #33751f;
+    --tab-group-color-orange: #9f3017;
+    --tab-group-color-red: #a3203a;
+    --tab-group-font-color-blue: #93c5fa;
+    --tab-group-font-color-cyan: #83dae7;
+    --tab-group-font-color-purple: #e0aefa;
+    --tab-group-font-color-yellow: #eecd6c;
+    --tab-group-font-color-pink: #f2a3c3;
+    --tab-group-font-color-grey: #9ba6b3;
+    --tab-group-font-color-green: #9ddd95;
+    --tab-group-font-color-orange: #f4b883;
+    --tab-group-font-color-red: #f2a4aa;
+  }
+}
+
+html, body {
+  /* warning */
+  height: 100%;
+  font-weight: var(--main-font-weight);
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-sizing: border-box;
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
+  cursor: default;
+}
+
+input, button {
+  color: var(--main-font-color);
+  background-color: var(--main-background-color);
+}
+
+/* warning on #root */
+.mozeidon-container {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--app-border-color);
+  border-radius: 8px;
+  background-color: var(--main-background-color);
+  color: var(--main-font-color);
+}
+
+.theme-transition {
+  transition: none !important;
+}
+
+.tabGroupColorblue {
+  background-color: var(--tab-group-color-blue);
+  color: var(--tab-group-font-color-blue);
+  border: 1px solid var(--tab-group-font-color-blue);
+}
+.tabGroupColorcyan {
+  background-color: var(--tab-group-color-cyan);
+  color: var(--tab-group-font-color-cyan);
+  border: 1px solid var(--tab-group-font-color-cyan);
+}
+.tabGroupColorgreen {
+  background-color: var(--tab-group-color-green);
+  color: var(--tab-group-font-color-green);
+  border: 1px solid var(--tab-group-font-color-green);
+}
+.tabGroupColorgrey {
+  background-color: var(--tab-group-color-grey);
+  color: var(--tab-group-font-color-grey);
+  border: 1px solid var(--tab-group-font-color-grey);
+}
+.tabGroupColororange {
+  background-color: var(--tab-group-color-orange);
+  color: var(--tab-group-font-color-orange);
+  border: 1px solid var(--tab-group-font-color-orange);
+}
+.tabGroupColorpink {
+  background-color: var(--tab-group-color-pink);
+  color: var(--tab-group-font-color-pink);
+  border: 1px solid var(--tab-group-font-color-pink);
+}
+.tabGroupColorpurple {
+  background-color: var(--tab-group-color-purple);
+  color: var(--tab-group-font-color-purple);
+  border: 1px solid var(--tab-group-font-color-purple);
+}
+.tabGroupColorred {
+  background-color: var(--tab-group-color-red);
+  color: var(--tab-group-font-color-red);
+  border: 1px solid var(--tab-group-font-color-red);
+}
+.tabGroupColoryellow {
+  background-color: var(--tab-group-color-yellow);
+  color: var(--tab-group-font-color-yellow);
+  border: 1px solid var(--tab-group-font-color-yellow);
+}
+
+.tabGroupDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.6em;
+  vertical-align: middle;
+}
+
+.mozeidonColor {
+  color: var(--light-orange);
+}
+.svgIcon {
+  /* filter trick to approximate #2e2e2e */
+  filter: invert(61%) sepia(0%) saturate(0%) hue-rotate(170deg) brightness(91%) contrast(85%);
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+
+.actionsButtonWebSearchActivated {
+  filter: invert(46%) sepia(85%) saturate(3548%) hue-rotate(342deg) brightness(96%) contrast(91%);
+}
+
+/* Window top border glowing effect on loading */
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--loading-glow-color), transparent);
+  opacity: 0.7;
+  animation: loading 1s linear infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes loading {
+  from {
+    left: 0%;
+    width: 0;
+    z-index: 100;
+  }
+  to {
+    left: 0;
+    width: 100%;
+  }
+}
+
+.customScrollBar {
+  overflow-y: scroll;
+  &::-webkit-scrollbar-track {
+    background-color: var(--main-background-color);
+  }
+  &::-webkit-scrollbar {
+    width: 5px;
+    background-color: var(--main-background-color);
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-orange);
+    border-radius: 30px;
+  }
+}
+
+/* ----------- Error ----------------- */
+#errorSettingsLink {
+  color: var(--light-orange);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ----------- List ----------------- */
+.liBox {
+  box-sizing: border-box;
+  border-radius: 8px;
+  margin-right: 8px;
+  margin-left: 8px;
+  border: 1px solid transparent;
+  padding: 4px 5px;
+  width: 93%;
+}
+.sliBox {
+  box-sizing: border-box;
+  border-radius: 8px;
+  margin-right: 8px;
+  margin-left: 8px;
+  border: 1px solid transparent;
+  padding: 4px 5px;
+  background-color: var(--selected-background-color);
+  width: 93%;
+}
+.itemFavicon {
+  border-radius: 50%;
+  align-items: center;
+  vertical-align: middle;
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: 0.5em;
+}
+.itemLineSpan {
+  display: inline-block;
+  vertical-align: middle;
+  width: 670px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.liFirstLine {
+  color: var(--main-font-color);
+}
+.liFirstLineSmall {
+  min-height: 1.5em;
+  font-size: .8em;
+  font-weight: var(--enlarged-font-weight);
+  color: var(--main-font-color);
+}
+.liLine {
+  font-size: .9em;
+  color: var(--main-font-color);
+}
+.liLineSmallFont {
+  font-size: .7em;
+  color: var(--main-font-color);
+}
+.closedItemLiBox {
+  color: var(--light-orange);
+}
+#listContainer {
+  outline: none;
+}
+.tooltip-wrapper {
+  position: relative;
+}
+.tooltip {
+  position: absolute;
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* Firefox support */
+  top: 80%;
+  right: 0;
+  margin-top: 4px;
+  z-index: 999;
+  font-size: .8em;
+  background: var(--selected-background-color);
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  max-width: 400px;
+  pointer-events: auto;
+  user-select: text;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+.tooltip-wrapper:hover .tooltip,
+.tooltip:hover {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ----------- ActionButton ----------------- */
+.actionButton {
+  appearance: none;
+  border: 1px solid var(--button-border-color);
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 20px;
+  list-style: none;
+  padding: 6px 16px;
+  margin: .8em;
+  margin-right: 1em;
+  margin-left: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  white-space: nowrap;
+  word-wrap: break-word;
+}
+.actionButtonSmall {
+  font-size: .9em;
+  border-radius: 4px;
+  line-height: 15px;
+  list-style: none;
+  padding: 3px 8px;
+  margin: .4em;
+  margin-right: .5em;
+  margin-left: 0;
+}
+.actionButtonNoMargin {
+  margin: 0;
+}
+.actionButton:enabled:hover {
+  box-shadow: var(--highlight-box-shadow);
+  border: 1px solid transparent;
+}
+.actionButton:active {
+  background-color: var(--main-background-color);
+  box-shadow: var(--button-box-shadow);
+}
+.actionButton:enabled:focus {
+  box-shadow: var(--highlight-box-shadow);
+  border: 1px solid transparent;
+  outline: none;
+}
+.actionButton:disabled {
+  cursor: default;
+  filter: none;
+}
+.actionButton:before {
+  display: none;
+}
+.actionButton:-webkit-details-marker {
+  display: none;
+}
+.loopButton {
+  outline: none;
+  appearance: none;
+  border: 0px solid transparent;
+  box-sizing: border-box;
+  display: inline-block;
+  padding: 0;
+}
+/* ----------- PanelsLauncher ----------------- */
+.panelLauncherContainer {
+  display: flex;
+  flex-direction: column;
+}
+.panelLauncher {
+  display: flex;
+  align-items: center;
+}
+.panelLauncherDescription {
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+}
+.panelLauncherShortcut {
+  cursor: pointer;
+  color: var(--light-orange);
+}
+.panelLauncherShortcut:hover {
+  font-weight: bold;
+}
+
+.panelLauncherButton {
+  min-width: 14em;
+}
+
+/* ----------- UserNotification ----------------- */
+.userNotification {
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out, border 1.5s ease-in-out, box-shadow 1.5s ease-in-out;
+  font-size: 0.8em !important;
+  font-style: italic;
+}
+
+.userNotification.visible {
+  border: 1px solid transparent;
+  box-shadow: var(--highlight-box-shadow);
+  opacity: 1;
+}
+
+/* ----------- SettingsView ----------------- */
+.settingsNavbar {
+  margin: 1em;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.settingsView {
+  display: flex;
+  padding: 0 1em;
+  height: 88vh;
+  flex-direction: column;
+  overflow: hidden;
+}
+.groupTabEditorView {
+  display: flex;
+  padding: 0 1em;
+  height: 95vh;
+  flex-direction: column;
+  overflow: hidden;
+}
+.groupTabEditorContent {
+  flex: 1;
+  padding: .2rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.settingsFooter {
+  display: flex;
+  justify-content: end;
+}
+.settingsTitle {
+  cursor: default;
+}
+.settingsContent {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.settingsNavbarLinks {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+.settingsNavbarLinks li {
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: color 0.2s ease, border-bottom 0.2s ease;
+  outline: none;
+  padding: 2px;
+  border-bottom: 1px solid transparent;
+}
+.settingsNavbarLinks li.active {
+  color: var(--light-orange);
+  cursor: default;
+}
+.settingsNavbarLinks li:focus {
+  border-bottom: 1px solid var(--light-orange);
+}
+
+.moreInfo {
+  cursor: default;
+  color: var(--light-orange);
+  font-size: 0.8em;
+}
+
+/* ----------- containers ----------------- */
+.container {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.actionContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.formFieldContainer {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  /*margin-top: 1em;*/
+}
+
+.row {
+  display: flex;
+}
+
+/* ----------- Search Bar ----------------- */
+.searchBar {
+  margin-left: 1em;
+  gap: .7em;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+#searchInput {
+  flex-grow: 1;
+  font-size: 1.3em;
+  color: var(--main-font-color);
+  font-style: italic;
+  caret-color: var(--light-orange);
+}
+#actionButtonToggleSearchType {
+  margin-left: 1em;
+}
+#actionButtonContext {
+  border: 1px solid transparent;
+  box-shadow: var(--highlight-box-shadow);
+}
+
+
+/* ----------- Editors ----------------- */
+input {
+  display: flex;
+  border: 1px solid transparent;
+  padding: 0.8em 0.2em;
+  color: #0f0f0f;
+  transition: border-color 0.25s;
+  outline: none;
+}
+textarea {
+    border: none;
+    border-radius: 0;
+    overflow: auto;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    resize: none;
+}
+.rowWithMarginBottom {
+  display: flex;
+  margin-bottom: 1em;
+}
+
+.bookmarkFolderSelect {
+  font-size: .9em;
+  margin: 2px;
+  margin-left: 12px;
+  margin-right: 8px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+.bookmarkFolderSelect__indicator-separator {
+  opacity: 0;
+}
+.bookmarkFolderSelect__control {
+  background-color: var(--main-background-color) !important;
+  border: 1px solid var(--main-background-color) !important;
+  color: var(--main-font-color) !important;
+  box-shadow: 0 0 0 1px var(--button-border-color) !important;
+}
+.bookmarkFolderSelect__control,
+.bookmarkFolderSelect__single-value,
+.bookmarkFolderSelect__input,
+.bookmarkFolderSelect__placeholder {
+  color: var(--main-font-color) !important;
+  opacity: 1 !important;
+  width: "100%";
+}
+.bookmarkFolderSelect__control--is-focused {
+  background-color: var(--selected-input-background-color) !important;
+  box-shadow: 0 0 0 1px var(--button-border-color) !important;
+}
+
+.bookmarkFolderSelect__menu {
+  padding: 1px;
+  border: 1px solid var(--light-orange) !important;
+  background-color: var(--selected-input-background-color) !important;
+  color: var(--main-font-color) !important;
+}
+.bookmarkFolderSelect__option {
+  background-color: var(--main-background-color) !important;
+  color: var(--main-font-color) !important;
+}
+.bookmarkFolderSelect__option--is-focused {
+  background-color: var(--selected-background-color) !important;
+}
+
+
+.editInput {
+  display: flex;
+  margin: 2px;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 8px;
+
+  font-size: .9em;
+  color: var(--main-font-color);
+  background-color: var(--main-background-color);
+  border: 1px solid var(--button-border-color);
+  padding: 10px;
+  box-shadow: 0 1px 0 var(--button-border-color);
+}
+.editBookmarkInput {
+  min-height: 60px;
+}
+.editInput:focus {
+  background-color: var(--selected-input-background-color)
+}
+.invalidInput {
+  border: 1px solid var(--light-orange);
+  box-shadow: 0 1px 0 var(--light-orange);
+}
+.formLabel {
+  margin-left: 10px;
+  margin-top: 8px;
+  border-radius: 8px;
+}
+.nativeManifestContent {
+  margin: 0;
+  padding: 0 0 1em 1em;
+}
+.mozeidonDocInfo {
+  font-size: 0.8em;
+  cursor: default;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.6s ease-in-out, opacity 0.6s ease-in-out ;
+}
+.mozeidonDocInfo.visible {
+  opacity: 1;
+  max-height: 500px;
+}
+.formDocInfo {
+  margin-left: 1em;
+  margin-bottom: .4em;
+  font-size: .7em;
+  cursor: default;
+}
+.radioGroup {
+  display: flex;
+  gap: 1.5em;
+  margin: 1em;
+}
+.radioGroup label {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+/* ----------- VerticalActionsView ----------------- */
+.verticalActionsViewContainer {
+  position: absolute;
+  bottom: 1.3em;
+  right: .6em;
+  min-width: 15px;
+  min-height: 390px;
+  margin-top: 4px;
+  z-index: 999;
+  background: var(--main-background-color);
+  padding: .2em;
+  border: 1px solid transparent;
+  white-space: pre-wrap;
+  cursor: default;
+  pointer-events: auto;
+  user-select: text;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  outline: none;
+}
+.actionsRowContainer {
+  display: flex;
+  flex-direction: column;
+  gap: .7em;
+}
+.actionsRowButtonContainer {
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+.actionsRowButtonContainerFocus {
+  box-shadow: var(--highlight-box-shadow);
+}
+.actionsRowButton {
+  appearance: none;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.1em;
+  list-style: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  word-wrap: break-word;
+  outline: none;
+}

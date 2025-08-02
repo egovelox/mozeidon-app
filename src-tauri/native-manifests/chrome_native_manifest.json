@@ -1,0 +1,7 @@
+{
+  "name": "mozeidon",
+  "description": "Native messaging add-on to interact with your browser",
+  "path": "__NATIVE_HOST_EXECUTABLE_PATH__",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://lipjcjopdojfmfjmnponpjkkccbjoipe/"]
+}
