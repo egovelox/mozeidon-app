@@ -1,0 +1,46 @@
+{
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/mozeidon-cli",
+      "binaries/mozeidon-native-app"
+    ]
+  },
+  "productName": "mozeidon-app",
+  "version": "0.0.1",
+  "identifier": "com.egovelox.mozeidon-app",
+  "plugins": {},
+  "app": {
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 500,
+        "width": 800,
+        "resizable": false,
+        "decorations": false,
+        "center": true,
+        "transparent": true,
+        "alwaysOnTop": false,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
+  }
+}

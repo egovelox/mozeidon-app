@@ -1,0 +1,34 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
+  "permissions": [
+    "os:default",
+    "core:default",
+    "shell:default",
+    "store:default",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-write-text",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "open-web-browser",
+          "cmd": "open",
+          "args": true
+        }
+      ]
+    }
+  ]
+}

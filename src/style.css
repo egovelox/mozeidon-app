@@ -1,0 +1,437 @@
+:root {
+  /*font-family: Inter, Avenir, Helvetica, Arial, sans-serif;*/
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-weight: 500;
+  font-size: 16px;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  --main-font-color: #5d5d67;
+  --main-background-color: #ebebef;
+  --selected-background-color: #c7c6c9;
+  --button-border-color: rgba(28, 27, 26, 0.2);
+  --loading-glow-color: #000000;
+  --closed-item-color: #d25529;
+  --button-focus-filter: brightness(90%) contrast(80%);
+  --button-box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
+
+  background-color: var(--main-background-color);
+  color: var(--main-font-color);
+}
+
+.svgIcon {
+  /* filter trick to approximate #a6a6a6 */
+  filter: invert(61%) sepia(0%) saturate(0%) hue-rotate(170deg) brightness(91%) contrast(85%);
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+}
+
+/* Window top border glowing effect on loading */
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--loading-glow-color), transparent);
+  opacity: 0.7;
+  animation: loading 1s linear infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes loading {
+  from {
+    left: 0%;
+    width: 0;
+    z-index: 100;
+  }
+  to {
+    left: 0;
+    width: 100%;
+  }
+}
+
+.customScrollBar {
+  overflow-y: scroll;
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--main-background-color);
+  }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    background-color: var(--main-background-color);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #6e6e6e;
+    border-radius: 30px;
+  }
+}
+.container {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.settingsContainer {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 85vh;
+  margin: 0;
+}
+
+.settingsHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 1em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid var(--button-border-color);
+}
+
+.settingsContent {
+  overflow-y: auto; /* scroll if content is tall */
+}
+
+.settingsVersionBox {
+  padding: 1em 1em 0 2em;
+}
+
+.settingsFooter {
+  border-top: 1px solid var(--button-border-color);
+  padding: .3em;
+}
+
+.actionContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.formFieldContainer {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 1em;
+}
+
+.row {
+  display: flex;
+}
+
+.userNotification {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.userNotification.visible {
+  opacity: 1;
+}
+
+.actionRow {
+  display: flex;
+  margin: 2px;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 8px;
+}
+
+.actionLabel {
+  margin-left: 10px;
+  margin-top: 8px;
+  border-radius: 6px;
+}
+
+.actionButton {
+  appearance: none;
+  border: 1px solid var(--button-border-color);
+  box-shadow: var(--button-box-shadow);
+  border-radius: 6px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 20px;
+  list-style: none;
+  padding: 6px 16px;
+  margin: .8em;
+  margin-right: 1em;
+  margin-left: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  white-space: nowrap;
+  word-wrap: break-word;
+}
+
+.actionButton:hover {
+  background-color: var(--main-background-color);
+  filter: var(--button-focus-filter);
+  text-decoration: none;
+}
+
+.actionButton:active {
+  background-color: var(--main-background-color);
+  box-shadow: var(--button-box-shadow);
+}
+
+.actionButton:disabled {
+  cursor: default;
+  box-shadow: none;
+  filter: none;
+}
+
+.actionButton:focus {
+  filter: var(--button-focus-filter);
+  outline: none;
+}
+
+.actionButton:before {
+  display: none;
+}
+
+.actionButton:-webkit-details-marker {
+  display: none;
+}
+
+.actionButtonLight {
+  background: #38414f;
+}
+.actionButtonLight:hover {
+  background: #38414f;
+}
+
+.li {
+  display: flex;
+  flex-direction: column;
+}
+
+.liBox {
+  border-radius: 6px;
+  margin-right: 8px;
+  border: 1px solid transparent;
+  padding: 5px;
+}
+
+.sliBox {
+  border-radius: 8px;
+  margin-right: 8px;
+  border: 1px solid transparent;
+  padding: 5px;
+  background-color: var(--selected-background-color);
+}
+
+.itemFavicon {
+  border-radius: 50%;
+  vertical-align: middle;
+  width: 1.2em;
+  height: 1.2em;
+  filter: brightness(0.7);
+  margin-right: 0.5em;
+}
+
+.liFirstLine {
+  vertical-align: middle;
+  color: var(--main-font-color);
+}
+
+.liFirstLineSmall {
+  font-size: .9em;
+  color: var(--main-font-color);
+}
+.liLine {
+  font-size: .9em;
+}
+
+.closedItemBox {
+  color: var(--closed-item-color);
+}
+
+#listContainer {
+  outline: none;
+}
+
+input {
+  display: flex;
+  border: 1px solid transparent;
+  padding: 0.8em 0.2em;
+  color: #0f0f0f;
+  background-color: #ffffff;
+  transition: border-color 0.25s;
+  outline: none;
+}
+
+.searchBar {
+  display: flex;
+  flex-direction: row;
+}
+
+.footerContainer {
+  margin-top: .1em;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#searchInput {
+  flex-grow: 1;
+  font-size: 1.3em;
+  color: var(--main-font-color);
+}
+
+.rowWithButtons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rowButtonsContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.rowButton {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-block;
+  font-size: .7em;
+  list-style: none;
+  margin-right: .2em;
+  margin-left: 0;
+  background-color: var(--selected-background-color);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  white-space: nowrap;
+  word-wrap: break-word;
+}
+
+.rowButton:focus {
+  filter: var(--button-focus-filter);
+  outline:none;
+}
+
+.rowButton:hover {
+  filter: var(--button-focus-filter);
+  outline:none;
+  text-decoration: none;
+}
+
+.editInput {
+  font-size: .9em;
+  color: var(--main-font-color);
+  background-color: var(--main-background-color);
+  min-height: 80px;
+  padding: 10px;
+}
+
+.editInput:focus {
+  filter: var(--button-focus-filter);
+}
+
+/* FIX currently must be here, should be on top */
+input, button {
+  color: var(--main-font-color);
+  background-color: var(--main-background-color);
+}
+
+.loopButton {
+  appearance: none;
+  border: 0px solid transparent;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+textarea {
+    border: none;
+    border-radius: 0;
+    overflow: auto;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    resize: none;
+}
+
+.tooltip-wrapper {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* Firefox support */
+  top:50%;
+  right: 0;
+  margin-top: 4px;
+  z-index: 999;
+  font-size: .8em;
+  background: var(--selected-background-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  max-width: 400px;
+
+  pointer-events: auto;
+  user-select: text;
+
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tooltip-wrapper:hover .tooltip,
+.tooltip:hover {
+  visibility: visible;
+  opacity: 1;
+}
+
+:root[data-theme="light"] {
+  /* optional: the light is all what is declared above override if needed */
+}
+
+:root[data-theme="dark"] {
+  --main-font-color: #8d948e;
+  --button-border-color: rgba(15, 10, 8, 0.2);
+  --main-background-color: #252526;
+  --selected-background-color: #1c1b1a;
+  --loading-glow-color: #a6a6a6;
+  --button-focus-filter: brightness(120%) contrast(80%);
+
+  background-color: var(--main-background-color);
+  color: var(--main-font-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* will apply only if the user settings have a theme: system */
+  :root:not([data-theme]) {
+    --main-font-color: #8d948e;
+    --button-border-color: rgba(15, 10, 8, 0.2);
+    --main-background-color: #252526;
+    --selected-background-color: #1c1b1a;
+    --loading-glow-color: #a6a6a6;
+    --button-focus-filter: brightness(120%) contrast(80%);
+
+    background-color: var(--main-background-color);
+    color: var(--main-font-color);
+  }
+}
+
+.theme-transition {
+  transition: none !important;
+}
