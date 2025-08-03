@@ -8,6 +8,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": [
+      "native-manifests/*"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -27,15 +30,23 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "title": "mozeidon",
         "fullscreen": false,
-        "height": 500,
+        "height": 480,
         "width": 800,
         "resizable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "skipTaskbar": true,
         "decorations": false,
+        "acceptFirstMouse": true,
+        "shadow": false,
         "center": true,
         "transparent": true,
-        "alwaysOnTop": false,
-        "visible": false
+        "alwaysOnTop": true,
+        "visible": false,
+        "visibleOnAllWorkspaces": true
       }
     ],
     "security": {

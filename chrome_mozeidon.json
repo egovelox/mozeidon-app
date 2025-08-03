@@ -1,0 +1,7 @@
+{
+  "name": "mozeidon",
+  "description": "Native messaging add-on to interact with your browser",
+  "path": "/opt/homebrew/bin/mozeidon-native-app",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://afoecgfknohamnbckjabbhmneibpbfob/"]
+}

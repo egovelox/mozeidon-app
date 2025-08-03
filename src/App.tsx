@@ -18,7 +18,7 @@ import { ListContainer } from "./components/List"
 import { WebSearchListContainer } from "./components/WebSearchListContainer"
 import { BookmarksEditor, EditRefs } from "./components/BookmarksEditor"
 import { SearchInput } from "./components/SearchInput"
-import { SettingsEditor } from "./components/SettingsEditor"
+import { SettingsView } from "./components/SettingsView"
 import { ShortcutListenerContainer } from "./components/ShortcutListenerContainer"
 import { WindowShortcutListener } from "./components/WindowShortcutListener"
 import { useInit } from "./hooks/useInit"
@@ -115,10 +115,10 @@ function App() {
     listen<{ showSettings: boolean }>("toggle-settings", (event) => {
       if (event.payload.showSettings) {
         /*
-         * here the SettingsEditor is shown after the user clicked OS menu-bar.
+         * here the SettingsView is shown after the user clicked OS menu-bar.
          * We set previousContext to None
-         * so the SettingsEditor will not show a Back button.
-         * ( see showBackButton in SettingsEditor props )
+         * so the SettingsView will not show a Back button.
+         * ( see showBackButton in SettingsView props )
          */
         setPreviousContext(Context.None)
         setContext(Context.Settings)
@@ -134,7 +134,8 @@ function App() {
     // FIX
     // closedItems are required for useEffect inside,
     // or the list will lose the selected row
-    closedItems
+    closedItems,
+    isWebSearch
   )
 
   const tabsShortcutHandler = async () => {
@@ -311,7 +312,7 @@ function App() {
         }}
       />
       {context === Context.Settings ? (
-        <SettingsEditor
+        <SettingsView
           showBackButton={previousContext !== Context.None}
           onBackToList={() => {
             resetForPreviousContext()
@@ -456,8 +457,8 @@ function App() {
                         src={mozeidonLogo}
                         alt="Mozeidon logo"
                         style={{
-                          width: "1.5em",
-                          height: "1.5em",
+                          width: "1em",
+                          height: "1em",
                           verticalAlign: "middle",
                         }}
                       />

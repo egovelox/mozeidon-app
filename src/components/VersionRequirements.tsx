@@ -1,14 +1,10 @@
-import { useState } from "react"
 import chromeLogo from "../assets/chrome.svg"
 import firefoxLogo from "../assets/firefox.svg"
 import githubLogo from "../assets/github.svg"
-import { getPlatform } from "../utils/getPlatform"
 
 export const VersionRequirements = () => {
-  const [plateform] = useState(getPlatform())
   return (
     <div>
-      Requirements for {plateform} :
       <ul>
         <li style={{ lineHeight: 1.5 }}>
           <span style={{ cursor: "pointer" }}>

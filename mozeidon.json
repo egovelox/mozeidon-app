@@ -1,0 +1,9 @@
+{
+  "name": "mozeidon",
+  "description": "Native messaging add-on to interact with your browser",
+  "path": "/home/cunc/DEV/tauri/mozeidon-app/src-tauri/target/debug/mozeidon-native-app",
+  "type": "stdio",
+  "allowed_extensions": [
+    "mozeidon-addon@egovelox.com"
+  ]
+}

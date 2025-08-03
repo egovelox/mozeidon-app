@@ -51,6 +51,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   useEffect(() => {
     fetchSettings()
       .then((fetched) => {
+        emit("js-message", { message: `fetched ! ${JSON.stringify(fetched)}` })
         const newSettings = fetched
           ? { ...defaultSettings, ...fetched }
           : defaultSettings
@@ -76,6 +77,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
   // Register global-shortcuts
   useEffect(() => {
+    emit("js-message", {
+      message: `in souldRegister effect ! ${JSON.stringify(settings)}`,
+    })
     if (settings && shouldRegister) {
       const globalShortcuts = getGlobalShortcuts(settings)
       const tasks = []
@@ -84,13 +88,25 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
           // 1. handle register
           if (globalShortcut !== INACTIVE_SHORTCUT_VALUE) {
             if (await isRegistered(globalShortcut)) {
+              await emit("js-message", { message: `isRegistered true` })
               return
             }
-            await register(globalShortcut, (event) => {
-              if (event.state === "Pressed") {
-                shortcutsHandlers[key as GlobalShortcutsKey]()
-              }
-            })
+            try {
+              await emit("js-message", {
+                message: `registering ${key} ${globalShortcut}`,
+              })
+              await register(globalShortcut, (event) => {
+                if (event.state === "Pressed") {
+                  emit("js-message", {
+                    message: `pressed ${key} ${globalShortcut}`,
+                  })
+                  shortcutsHandlers[key as GlobalShortcutsKey]()
+                }
+              })
+              await emit("js-message", { message: `did register !` })
+            } catch (e) {
+              await emit("js-message", { message: `${JSON.stringify(e)}` })
+            }
           }
 
           // 2. handle unregister
