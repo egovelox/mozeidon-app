@@ -12,13 +12,13 @@ import noWebSearchIcon from "./assets/nowebsearch.svg"
 import "./App.css"
 import { BookmarkItem } from "./domain/bookmarks/models"
 import { BmFormElement } from "./domain/bookmarks/validation"
-import { Settings } from "./domain/settings/models"
+import { AppSettings } from "./domain/settings/models"
 import { TabItem } from "./domain/tabs/models"
 import { ListContainer } from "./components/List"
 import { WebSearchListContainer } from "./components/WebSearchListContainer"
 import { BookmarksEditor, EditRefs } from "./components/BookmarksEditor"
 import { SearchInput } from "./components/SearchInput"
-import { SettingsEditor } from "./components/SettingsEditor"
+import { SettingsView } from "./components/SettingsView"
 import { ShortcutListenerContainer } from "./components/ShortcutListenerContainer"
 import { WindowShortcutListener } from "./components/WindowShortcutListener"
 import { useInit } from "./hooks/useInit"
@@ -115,10 +115,10 @@ function App() {
     listen<{ showSettings: boolean }>("toggle-settings", (event) => {
       if (event.payload.showSettings) {
         /*
-         * here the SettingsEditor is shown after the user clicked OS menu-bar.
+         * here the SettingsView is shown after the user clicked OS menu-bar.
          * We set previousContext to None
-         * so the SettingsEditor will not show a Back button.
-         * ( see showBackButton in SettingsEditor props )
+         * so the SettingsView will not show a Back button.
+         * ( see showBackButton in SettingsView props )
          */
         setPreviousContext(Context.None)
         setContext(Context.Settings)
@@ -134,11 +134,15 @@ function App() {
     // FIX
     // closedItems are required for useEffect inside,
     // or the list will lose the selected row
-    closedItems
+    closedItems,
+    isWebSearch
   )
 
   const tabsShortcutHandler = async () => {
     restoreDefaults()
+    /* show ui */
+    setContext(Context.Tabs)
+    await invoke("show")
     /* fetch items */
     const { res, duration } = await runWithChrono(() =>
       invoke("mozeidon", { context: Context.Tabs, args: GET_TABS_COMMAND })
@@ -146,15 +150,15 @@ function App() {
     const items: TabItem[] = JSON.parse(res as string)
     setHItems(items)
     setFuzzyItems(items)
-    /* show ui */
-    setContext(Context.Tabs)
-    await invoke("show")
     notify(`took ${duration} ms !`)
     setIsLoading(false)
   }
 
   const historyShortcutHandler = async () => {
     restoreDefaults()
+    /* show ui */
+    setContext(Context.History)
+    await invoke("show")
     /* fetch items */
     const { res, duration } = await runWithChrono(() =>
       invoke("mozeidon", {
@@ -165,15 +169,15 @@ function App() {
     const items: HistoryItem[] = JSON.parse(res as string)
     setHItems(items)
     setFuzzyItems(items)
-    /* show ui */
-    setContext(Context.History)
-    await invoke("show")
     notify(`took ${duration} ms !`)
     setIsLoading(false)
   }
 
   const recentlyClosedShortcutHandler = async () => {
     restoreDefaults()
+    /* show ui */
+    setContext(Context.RecentlyClosed)
+    await invoke("show")
     /* fetch items */
     const { res, duration } = await runWithChrono(() =>
       invoke("mozeidon", {
@@ -184,15 +188,15 @@ function App() {
     const items: TabItem[] = JSON.parse(res as string)
     setHItems(items)
     setFuzzyItems(items)
-    /* show ui */
-    setContext(Context.RecentlyClosed)
-    await invoke("show")
     notify(`took ${duration} ms !`)
     setIsLoading(false)
   }
 
   const bookmarksShortcutHandler = async () => {
     restoreDefaults()
+    /* show ui */
+    setContext(Context.Bookmarks)
+    await invoke("show")
     /* fetch items */
     const { res, duration } = await runWithChrono(() =>
       invoke("mozeidon", {
@@ -203,15 +207,12 @@ function App() {
     const items: BookmarkItem[] = JSON.parse(res as string)
     setHItems(items)
     setFuzzyItems(items)
-    /* show ui */
-    setContext(Context.Bookmarks)
-    await invoke("show")
     setIsLoading(false)
     notify(`took ${duration} ms !`)
   }
 
   /* Handle KeyDown */
-  const handleKeyDown = (event: KeyboardEvent, settings: Settings) =>
+  const handleKeyDown = (event: KeyboardEvent, settings: AppSettings) =>
     keyDownHandler({
       event,
       settings,
@@ -311,7 +312,7 @@ function App() {
         }}
       />
       {context === Context.Settings ? (
-        <SettingsEditor
+        <SettingsView
           showBackButton={previousContext !== Context.None}
           onBackToList={() => {
             resetForPreviousContext()
@@ -420,6 +421,7 @@ function App() {
                       setClosedItems={setClosedItems}
                       context={context}
                       listRef={listRef}
+                      restoreDefaults={restoreDefaults}
                     />
                   ) : (
                     <WebSearchListContainer
@@ -456,8 +458,8 @@ function App() {
                         src={mozeidonLogo}
                         alt="Mozeidon logo"
                         style={{
-                          width: "1.5em",
-                          height: "1.5em",
+                          width: "1em",
+                          height: "1em",
                           verticalAlign: "middle",
                         }}
                       />

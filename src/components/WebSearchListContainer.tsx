@@ -25,7 +25,9 @@ export const WebSearchListContainer = ({
   listRef,
 }: WebSearchListContainerProps) => {
   const {
-    settings: { web_search_engine_urls },
+    settings: {
+      appSettings: { web_search_engine_urls },
+    },
   } = useSettings()
 
   return (

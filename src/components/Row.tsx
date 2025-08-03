@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BookmarkItem } from "../domain/bookmarks/models"
 import { TabItem } from "../domain/tabs/models"
 import { Context, FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
@@ -14,9 +14,12 @@ import {
   closeTabAction,
   copyUrlToClipboard,
   deleteBookmarkAction,
+  openURLAction,
+  switchTabAction,
 } from "../actions/actions"
 import { useNotification } from "../hooks/useUserNotification"
 import { HistoryItem } from "../domain/history/models"
+import { invoke } from "@tauri-apps/api/core"
 
 type Item = TabItem | BookmarkItem | HistoryItem
 export interface RowProps<T> {
@@ -32,6 +35,7 @@ export interface RowProps<T> {
     setShowEditionTab: (v: boolean) => void
     setClosedItems: (i: string[]) => void
     rowDisplay: RowDisplay
+    restoreDefaults: () => void
   }
 }
 
@@ -60,7 +64,9 @@ export function getRows(context: Context) {
 export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
   /* Adding style attribute is very important here
     it supplies the row height to the elements. */
-  const { settings } = useSettings()
+  const {
+    settings: { appSettings: settings },
+  } = useSettings()
   const { notify } = useNotification()
   const isRowSelected = data.selected === index
   const rowDisplay = data.rowDisplay
@@ -128,16 +134,52 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
   const lastVisitLocalTime = lastVisit.toLocaleTimeString(
     settings.date_locale || undefined
   )
+
+  /*
+   * Because we use onClick to adjust the item in the list
+   * ( cf data.setClickCoordinateY )
+   * and because we use onDoubleClick to take an action
+   * we need a timeout to not fire onClick before
+   * we know that onDoubleClick is not fired.
+   * This is our solution to prevent a double-click on an item
+   * from firing the onDoubleClick on an other item
+   * ( it happens when the first item is adjusted in the list,
+   * and because of this adjustment, is not under the user cursor anymore )
+   */
+  const clickTimeout = useRef<number | null>(null)
+
+  const handleClick = (e: React.MouseEvent) => {
+    clickTimeout.current = window.setTimeout(() => {
+      data.setClickCoordinateY(e.pageY)
+      data.setSelection(index)
+    }, 250)
+  }
+
+  const handleDoubleClick = async () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current)
+      clickTimeout.current = null
+    }
+    openURLAction(item.url, settings.web_browser)
+    data.restoreDefaults()
+    await invoke("hide")
+  }
+  useEffect(() => {
+    return () => {
+      if (clickTimeout.current) {
+        clearTimeout(clickTimeout.current)
+      }
+    }
+  }, [])
+
   return (
-    <div
-      style={style}
-      onClick={(e) => {
-        data.setClickCoordinateY(e.pageY)
-        data.setSelection(index)
-      }}
-    >
+    <div style={style} onClick={handleClick}>
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div className={`${selectionClassName} ${closedClassName}`}>
+        <div
+          className={`${selectionClassName} ${closedClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}
@@ -181,7 +223,11 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
           />
         </div>
       ) : (
-        <div className={`${selectionClassName}`}>
+        <div
+          className={`${selectionClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}
@@ -222,7 +268,9 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
 export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
   /* Adding style attribute is very important here
     it supplies the row height to the elements. */
-  const { settings } = useSettings()
+  const {
+    settings: { appSettings: settings },
+  } = useSettings()
   const { notify } = useNotification()
   const isRowSelected = data.selected === index
   const rowDisplay = data.rowDisplay
@@ -291,16 +339,52 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
   const url = data.items.map(({ url }) => url)[index]
   const title = data.items.map(({ title }) => title)[index]
   const parent = data.items.map(({ parent }) => parent)[index]
+
+  /*
+   * Because we use onClick to adjust the item in the list
+   * ( cf data.setClickCoordinateY )
+   * and because we use onDoubleClick to take an action
+   * we need a timeout to not fire onClick before
+   * we know that onDoubleClick is not fired.
+   * This is our solution to prevent a double-click on an item
+   * from firing the onDoubleClick on an other item
+   * ( it happens when the first item is adjusted in the list,
+   * and because of this adjustment, is not under the user cursor anymore )
+   */
+  const clickTimeout = useRef<number | null>(null)
+
+  const handleClick = (e: React.MouseEvent) => {
+    clickTimeout.current = window.setTimeout(() => {
+      data.setClickCoordinateY(e.pageY)
+      data.setSelection(index)
+    }, 250)
+  }
+
+  const handleDoubleClick = async () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current)
+      clickTimeout.current = null
+    }
+    openURLAction(item.url, settings.web_browser)
+    data.restoreDefaults()
+    await invoke("hide")
+  }
+  useEffect(() => {
+    return () => {
+      if (clickTimeout.current) {
+        clearTimeout(clickTimeout.current)
+      }
+    }
+  }, [])
+
   return (
-    <div
-      style={style}
-      onClick={(e) => {
-        data.setClickCoordinateY(e.pageY)
-        data.setSelection(index)
-      }}
-    >
+    <div style={style} onClick={handleClick}>
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div className={`${selectionClassName} ${closedClassName}`}>
+        <div
+          className={`${selectionClassName} ${closedClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}
@@ -352,7 +436,11 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
           />
         </div>
       ) : (
-        <div className={`${selectionClassName}`}>
+        <div
+          className={`${selectionClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}
@@ -400,7 +488,9 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
 export const TabRow = ({ index, style, data }: RowProps<TabItem>) => {
   /* Adding style attribute is very important here
     it supplies the row height to the elements. */
-  const { settings } = useSettings()
+  const {
+    settings: { appSettings: settings },
+  } = useSettings()
   const { notify } = useNotification()
   const item = data.items[index]
   const domain = item.domain
@@ -418,11 +508,13 @@ export const TabRow = ({ index, style, data }: RowProps<TabItem>) => {
 
   useEffect(() => {
     /*
-     * When unmounting the row, put the focus back on the searchInput.
-     * This is particulary necessary due to conditional rendering of row-buttons :
-     * when the user puts focus (e.g with tab) on a row button
+     * When unmounting the selected row,
+     * put the focus back on the searchInput.
+     * This is particulary necessary due to conditional rendering
+     * of row-buttons on the selected row :
+     * when the user puts focus (e.g with tab) on a row-button
      * but then takes no action on this row button, instead just selects another row up or down.
-     * Had we not put the focus back on searchInput, focus would be kept on the row button,
+     * Had we not put the focus back on searchInput, focus would be kept on the row-button,
      * which is not displayed anymore since the user selected another row up or down.
      */
     return () => {
@@ -472,16 +564,51 @@ export const TabRow = ({ index, style, data }: RowProps<TabItem>) => {
     if (e.key === "Enter") e.stopPropagation()
   }
 
+  /*
+   * Because we use onClick to adjust the item in the list
+   * ( cf data.setClickCoordinateY )
+   * and because we use onDoubleClick to take an action
+   * we need a timeout to not fire onClick before
+   * we know that onDoubleClick is not fired.
+   * This is our solution to prevent a double-click on an item
+   * from firing the onDoubleClick on an other item
+   * ( it happens when the first item is adjusted in the list,
+   * and because of this adjustment, is not under the user cursor anymore )
+   */
+  const clickTimeout = useRef<number | null>(null)
+
+  const handleClick = (e: React.MouseEvent) => {
+    clickTimeout.current = window.setTimeout(() => {
+      data.setClickCoordinateY(e.pageY)
+      data.setSelection(index)
+    }, 250)
+  }
+
+  const handleDoubleClick = async () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current)
+      clickTimeout.current = null
+    }
+    await switchTabAction(`${item.windowId}:${item.id}`, settings.web_browser)
+    data.restoreDefaults()
+    await invoke("hide")
+  }
+  useEffect(() => {
+    return () => {
+      if (clickTimeout.current) {
+        clearTimeout(clickTimeout.current)
+      }
+    }
+  }, [])
+
   return (
-    <div
-      style={style}
-      onClick={(e) => {
-        data.setClickCoordinateY(e.pageY)
-        data.setSelection(index)
-      }}
-    >
+    <div style={style} onClick={handleClick}>
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div className={`${selectionClassName} ${closedClassName}`}>
+        <div
+          className={`${selectionClassName} ${closedClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}
@@ -535,7 +662,19 @@ export const TabRow = ({ index, style, data }: RowProps<TabItem>) => {
           />
         </div>
       ) : (
-        <div className={`${selectionClassName}`}>
+        <div
+          className={`${selectionClassName}`}
+          style={{ cursor: "default" }}
+          onDoubleClick={handleDoubleClick}
+          //onDoubleClick={async () => {
+          //  await switchTabAction(
+          //    `${item.windowId}:${item.id}`,
+          //    settings.web_browser
+          //  )
+          //  data.restoreDefaults()
+          //  await invoke("hide")
+          //}}
+        >
           <div className="rowWithButtons">
             <TextSelector
               faviconUrl={faviconUrl}

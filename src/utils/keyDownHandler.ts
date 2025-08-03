@@ -1,5 +1,5 @@
 import { Dispatch, KeyboardEvent, SetStateAction } from "react"
-import { Settings } from "../domain/settings/models"
+import { AppSettings, Settings } from "../domain/settings/models"
 import { Context } from "../utils/constants"
 import { TabItem } from "../domain/tabs/models"
 import { BookmarkItem } from "../domain/bookmarks/models"
@@ -16,7 +16,7 @@ import { invoke } from "@tauri-apps/api/core"
 
 type KeyDownHandlerParams = {
   event: KeyboardEvent
-  settings: Settings
+  settings: AppSettings
   context: Context
   fuzzyItems: (TabItem | BookmarkItem | HistoryItem)[]
   showEditionTab: boolean
@@ -104,7 +104,7 @@ export const keyDownHandler = async ({
     }
 
     if (
-      keyCombo.toLowerCase() === settings.shortcut_close_a_tab.toLowerCase() &&
+      keyCombo.toLowerCase() === settings.shortcut_close_item.toLowerCase() &&
       !closedItems.includes(actionId) &&
       !showEditionTab
     ) {
@@ -126,7 +126,7 @@ export const keyDownHandler = async ({
     }
 
     if (
-      keyCombo.toLowerCase() === settings.shortcut_close_a_tab.toLowerCase() &&
+      keyCombo.toLowerCase() === settings.shortcut_close_item.toLowerCase() &&
       !closedItems.includes(actionId) &&
       !showEditionTab
     ) {
@@ -148,7 +148,7 @@ export const keyDownHandler = async ({
 
 const navigationShortcutHandler =
   (
-    settings: Settings,
+    settings: AppSettings,
     keyCombination: string,
     hItems: unknown[],
     showEditionTab: boolean,

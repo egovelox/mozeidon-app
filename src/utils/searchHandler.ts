@@ -26,7 +26,7 @@ export function handleSearch(
 ) {
   const res = getSearchResults<Item>(
     searchType,
-    searchTerms,
+    searchTerms.trim(),
     items,
     getKeys(context)
   )

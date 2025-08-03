@@ -25,7 +25,8 @@ export function useListNavigation(
   selectedListItem: number,
   showEditionTab: boolean,
   rowDisplay: RowDisplay,
-  closedItems: unknown[]
+  closedItems: unknown[],
+  isWebSearch: boolean
 ) {
   const isMultiline = rowDisplay === RowDisplay.MultiLine
   const ITEM_SIZE = isMultiline ? MULTILINE_ITEM_SIZE : ONELINE_ITEM_SIZE
@@ -80,5 +81,5 @@ export function useListNavigation(
         }
       }
     }
-  }, [selectedListItem, showEditionTab, rowDisplay, closedItems])
+  }, [selectedListItem, showEditionTab, rowDisplay, closedItems, isWebSearch])
 }

@@ -67,10 +67,12 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             onFocus={() => document.getElementById("lastButton")?.focus()}
           ></button>
           <label className="row actionLabel" htmlFor="title">
-            <span>
-              &#x2605; title <i>(optional)</i>
-            </span>
+            <span>&#x2605; title</span>
           </label>
+          <div className="formDocInfo">
+            ( optional ) Choose your bookmark's title.
+            <br />
+          </div>
           <Editable
             defaultValue={selectedItem.title}
             id="title"
@@ -78,16 +80,24 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             autoFocus
           />
           <label className="row actionLabel" htmlFor="url">
-            <span>
-              &#x2605; url <i>(required)</i>
-            </span>
+            <span>&#x2605; url</span>
           </label>
+          <div className="formDocInfo">
+            ( required ) The bookmark's url. It must be well-formatted
+            <br />
+          </div>
           <Editable defaultValue={selectedItem.url} id="url" ref={editUrlRef} />
           <label className="row actionLabel" htmlFor="folderPath">
-            <span>
-              &#x2605; folder-path <i>(optional)</i>
-            </span>
+            <span>&#x2605; folder-path</span>
           </label>
+          <div className="formDocInfo">
+            ( optional ) The bookmark's folder expressed as a path, e.g
+            /articles/health technologies/
+            <br />
+            The folder-path must start with <b>/</b> and end with <b>/</b>
+            <br />
+          </div>
+
           <Editable
             defaultValue={selectedItem.parent}
             id="folderPath"
@@ -157,14 +167,14 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
   }
 )
 
-export const Editable = forwardRef<HTMLTextAreaElement, EditableProps>(
+const Editable = forwardRef<HTMLTextAreaElement, EditableProps>(
   ({ autoFocus, id, defaultValue }: EditableProps, ref) => {
     return (
       <textarea
         ref={ref}
         autoComplete="off"
         autoCorrect="off"
-        className="actionRow editInput"
+        className="actionRow editInput editBookmarkInput"
         id={id}
         defaultValue={defaultValue}
         autoFocus={autoFocus}

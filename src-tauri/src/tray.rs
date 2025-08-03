@@ -3,9 +3,12 @@ use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter,
+    AppHandle, Emitter, Manager,
 };
+#[cfg(target_os = "macos")]
 use tauri_nspanel::ManagerExt;
+
+use crate::common::MAIN_WINDOW_LABEL;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,17 +19,60 @@ struct ToggleSettings {
 pub fn create(app_handle: &AppHandle) -> tauri::Result<TrayIcon> {
     let icon = Image::from_bytes(include_bytes!("../icons/mozeidon_small.png"))?;
 
-    let quit_i = MenuItem::with_id(app_handle, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app_handle, &[&quit_i])?;
+    let quit_entry = MenuItem::with_id(
+        app_handle,
+        "quitMozeidon",
+        "quit mozeidon",
+        true,
+        None::<&str>,
+    )?;
+
+    #[cfg(target_os = "linux")]
+    let toggle_settings_entry = MenuItem::with_id(
+        app_handle,
+        "toggleMozeidon",
+        "toggle mozeidon",
+        true,
+        None::<&str>,
+    )?;
+
+    #[cfg(target_os = "linux")]
+    let menu = Menu::with_items(app_handle, &[&toggle_settings_entry, &quit_entry])?;
+
+    #[cfg(not(target_os = "linux"))]
+    let menu = Menu::with_items(app_handle, &[&quit_entry])?;
+
     TrayIconBuilder::with_id("tray")
         .menu(&menu)
+        /* works only for windows and macos */
         .show_menu_on_left_click(false)
         .icon(icon)
         .icon_as_template(true)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "quit" => {
+            "quitMozeidon" => {
                 println!("quit menu item was clicked");
                 app.exit(0);
+            }
+            "toggleMozeidon" => {
+                #[cfg(target_os = "linux")]
+                {
+                    println!("toggle menu item was clicked");
+                    let window = app.get_webview_window(MAIN_WINDOW_LABEL).unwrap();
+                    if window.is_visible().unwrap() {
+                        let _ = window.hide();
+                        return;
+                    }
+                    app.emit(
+                        "toggle-settings",
+                        ToggleSettings {
+                            show_settings: true,
+                        },
+                    )
+                    .unwrap();
+
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
             }
             _ => {
                 println!("menu item {:?} not handled", event.id);
@@ -34,26 +80,53 @@ pub fn create(app_handle: &AppHandle) -> tauri::Result<TrayIcon> {
         })
         .on_tray_icon_event(|tray, event| {
             let app_handle = tray.app_handle();
+            #[cfg(not(target_os = "macos"))]
+            {
+                if let TrayIconEvent::Click { button_state, .. } = event {
+                    if button_state == MouseButtonState::Up {
+                        let window = app_handle.get_webview_window(MAIN_WINDOW_LABEL).unwrap();
 
-            if let TrayIconEvent::Click { button_state, .. } = event {
-                if button_state == MouseButtonState::Up {
-                    let panel = app_handle.get_webview_panel("main").unwrap();
+                        if window.is_visible().unwrap() {
+                            let _ = window.hide();
+                            return;
+                        }
 
-                    if panel.is_visible() {
-                        panel.order_out(None);
-                        return;
+                        app_handle
+                            .emit(
+                                "toggle-settings",
+                                ToggleSettings {
+                                    show_settings: true,
+                                },
+                            )
+                            .unwrap();
+
+                        let _ = window.show();
+                        let _ = window.set_focus();
                     }
+                }
+            }
+            #[cfg(target_os = "macos")]
+            {
+                if let TrayIconEvent::Click { button_state, .. } = event {
+                    if button_state == MouseButtonState::Up {
+                        let panel = app_handle.get_webview_panel(MAIN_WINDOW_LABEL).unwrap();
 
-                    app_handle
-                        .emit(
-                            "toggle-settings",
-                            ToggleSettings {
-                                show_settings: true,
-                            },
-                        )
-                        .unwrap();
+                        if panel.is_visible() {
+                            panel.order_out(None);
+                            return;
+                        }
 
-                    panel.show();
+                        app_handle
+                            .emit(
+                                "toggle-settings",
+                                ToggleSettings {
+                                    show_settings: true,
+                                },
+                            )
+                            .unwrap();
+
+                        panel.show();
+                    }
                 }
             }
         })

@@ -21,6 +21,7 @@ type ListContainerProps = {
   setClosedItems: React.Dispatch<React.SetStateAction<string[]>>
   context: Context
   listRef: React.RefObject<List>
+  restoreDefaults: () => void
 }
 
 export function ListContainer({
@@ -33,6 +34,7 @@ export function ListContainer({
   setClosedItems,
   context,
   listRef,
+  restoreDefaults,
 }: ListContainerProps) {
   return (
     <List
@@ -59,6 +61,7 @@ export function ListContainer({
         setClickCoordinateY: (y: number) => {
           window.clickCoordinateY = y
         },
+        restoreDefaults,
       }}
     >
       {getRows(context)}

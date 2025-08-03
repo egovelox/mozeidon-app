@@ -1,50 +1,58 @@
+use common::MAIN_WINDOW_LABEL;
 use tauri::{Listener, Manager};
-use window::WebviewWindowExt;
 
-mod command;
+mod commands;
+mod common;
+mod setup;
 mod tray;
-mod window;
 
-pub(crate) const SPOTLIGHT_LABEL: &str = "main";
 pub fn run() {
-    tauri::Builder::default()
+    let ctx = tauri::generate_context!();
+    let mut app_builder = tauri::Builder::default();
+    app_builder = app_builder
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_shell::init());
+
+    #[cfg(target_os = "macos")]
+    {
+        app_builder = app_builder.plugin(tauri_nspanel::init());
+    }
+
+    let app = app_builder
         .invoke_handler(tauri::generate_handler![
-            command::init,
-            command::mozeidon,
-            command::mozeidon_write,
-            command::show,
-            command::hide,
+            commands::init,
+            commands::mozeidon,
+            commands::mozeidon_write,
+            commands::show,
+            commands::hide,
+            commands::write_manifest,
+            commands::write_all_manifests,
+            commands::get_browser_manifests,
+            commands::get_user_home_dir,
         ])
-        .plugin(tauri_nspanel::init())
         .setup(move |app| {
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            #[cfg(target_os = "macos")]
+            {
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
 
-            let handle = app.app_handle();
+            let handle = app.handle().clone();
 
-            tray::create(handle)?;
-            let window = handle.get_webview_window(SPOTLIGHT_LABEL).unwrap();
+            tray::create(&handle)?;
+            let main_window = handle.get_webview_window(MAIN_WINDOW_LABEL).unwrap();
 
-            // Convert the window to a spotlight panel
-            let panel = window.to_spotlight_panel()?;
+            setup::default(app, main_window.clone());
 
             let _id = app.listen("js-message", |event| {
                 println!("got js-message with payload {:?}", event.payload());
             });
-            handle.listen(
-                format!("{}_panel_did_resign_key", SPOTLIGHT_LABEL),
-                move |_| {
-                    // Hide the panel when it's no longer the key window
-                    // This ensures the panel doesn't remain visible when it's not actively being used
-                    panel.order_out(None);
-                },
-            );
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .build(ctx)
         .expect("error while running tauri application");
+
+    app.run(|_app_handle, _event| {});
 }

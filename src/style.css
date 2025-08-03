@@ -14,13 +14,85 @@
   --main-background-color: #ebebef;
   --selected-background-color: #c7c6c9;
   --button-border-color: rgba(28, 27, 26, 0.2);
+  --app-border-color: rgba(28, 27, 26, 0.2);
   --loading-glow-color: #000000;
   --closed-item-color: #d25529;
   --button-focus-filter: brightness(90%) contrast(80%);
   --button-box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
+  --scrollbar-thumb-color: #c7c6c9;
+  --filter-main-background-color: brightness(20%);
 
+}
+
+html, body {
+  /* warning */
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* warning on #root */
+.mozeidon-container {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--app-border-color);
+  border-radius: 8px;
   background-color: var(--main-background-color);
   color: var(--main-font-color);
+}
+
+.settingsNavbar {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.settingsView {
+  display: flex;
+  padding: 0 1em;
+  height: 90vh;
+  flex-direction: column;
+  overflow: hidden;
+}
+.settingsContent {
+  flex: 1;
+  padding: 1rem;
+  /*background-color: #f5f5f5;*/
+  /*color: #333;*/
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.settingsNavbarLinks {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.settingsNavbarLinks li {
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: color 0.2s ease, border-bottom 0.2s ease;
+  outline: none;
+  padding: 2px;
+  /*border-radius: 8px;*/
+  border-bottom: 1px solid transparent; /* Reserve space to prevent layout shift on focus */
+}
+
+.settingsNavbarLinks li:not(.active):focus {
+  outline: none;
+  filter: var(--filter-main-background-color);
+}
+
+.settingsNavbarLinks li.active {
+  color: var(--closed-item-color);
+  cursor: default;
+  /*border-bottom: 1px solid rgba(210, 85, 41, 0.6);*/
 }
 
 .svgIcon {
@@ -70,44 +142,16 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: #6e6e6e;
+    background-color: var(--scrollbar-thumb-color);
     border-radius: 30px;
   }
 }
+
 .container {
   margin: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-
-.settingsContainer {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  height: 85vh;
-  margin: 0;
-}
-
-.settingsHeader {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 1em;
-  padding-bottom: 1em;
-  border-bottom: 1px solid var(--button-border-color);
-}
-
-.settingsContent {
-  overflow-y: auto; /* scroll if content is tall */
-}
-
-.settingsVersionBox {
-  padding: 1em 1em 0 2em;
-}
-
-.settingsFooter {
-  border-top: 1px solid var(--button-border-color);
-  padding: .3em;
 }
 
 .actionContainer {
@@ -124,6 +168,11 @@
 
 .row {
   display: flex;
+}
+
+.rowWithMarginBottom {
+  display: flex;
+  margin-bottom: 1em;
 }
 
 .userNotification {
@@ -146,14 +195,14 @@
 .actionLabel {
   margin-left: 10px;
   margin-top: 8px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .actionButton {
   appearance: none;
   border: 1px solid var(--button-border-color);
   box-shadow: var(--button-box-shadow);
-  border-radius: 6px;
+  border-radius: 8px;
   box-sizing: border-box;
   cursor: pointer;
   display: inline-block;
@@ -170,6 +219,10 @@
   vertical-align: middle;
   white-space: nowrap;
   word-wrap: break-word;
+}
+
+.actionButtonNoMargin {
+  margin: 0;
 }
 
 .actionButton:hover {
@@ -215,8 +268,9 @@
 }
 
 .liBox {
-  border-radius: 6px;
+  border-radius: 8px;
   margin-right: 8px;
+  margin-left: 8px;
   border: 1px solid transparent;
   padding: 5px;
 }
@@ -224,6 +278,7 @@
 .sliBox {
   border-radius: 8px;
   margin-right: 8px;
+  margin-left: 8px;
   border: 1px solid transparent;
   padding: 5px;
   background-color: var(--selected-background-color);
@@ -234,7 +289,6 @@
   vertical-align: middle;
   width: 1.2em;
   height: 1.2em;
-  filter: brightness(0.7);
   margin-right: 0.5em;
 }
 
@@ -336,12 +390,22 @@ input {
   font-size: .9em;
   color: var(--main-font-color);
   background-color: var(--main-background-color);
-  min-height: 80px;
+  border: 1px solid var(--button-border-color);
   padding: 10px;
+  box-shadow: 0 1px 0 var(--button-border-color);
+}
+
+.editBookmarkInput {
+  min-height: 60px;
 }
 
 .editInput:focus {
   filter: var(--button-focus-filter);
+}
+
+.invalidInput {
+  border: 1px solid var(--closed-item-color);
+  box-shadow: 0 1px 0 var(--closed-item-color);
 }
 
 /* FIX currently must be here, should be on top */
@@ -376,14 +440,14 @@ textarea {
   position: absolute;
   overflow-wrap: break-word;
   word-wrap: break-word; /* Firefox support */
-  top:50%;
+  top: 150%;
   right: 0;
   margin-top: 4px;
   z-index: 999;
   font-size: .8em;
   background: var(--selected-background-color);
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   white-space: pre-wrap;
   max-width: 400px;
 
@@ -407,31 +471,67 @@ textarea {
 
 :root[data-theme="dark"] {
   --main-font-color: #8d948e;
-  --button-border-color: rgba(15, 10, 8, 0.2);
+  --button-border-color: #3a3a3a;
   --main-background-color: #252526;
   --selected-background-color: #1c1b1a;
   --loading-glow-color: #a6a6a6;
   --button-focus-filter: brightness(120%) contrast(80%);
-
-  background-color: var(--main-background-color);
-  color: var(--main-font-color);
+  --app-border-color: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-color: #1c1b1a;
+  --filter-main-background-color: brightness(140%);
 }
 
 @media (prefers-color-scheme: dark) {
   /* will apply only if the user settings have a theme: system */
   :root:not([data-theme]) {
     --main-font-color: #8d948e;
-    --button-border-color: rgba(15, 10, 8, 0.2);
+    --button-border-color: #3a3a3a;
     --main-background-color: #252526;
     --selected-background-color: #1c1b1a;
     --loading-glow-color: #a6a6a6;
     --button-focus-filter: brightness(120%) contrast(80%);
-
-    background-color: var(--main-background-color);
-    color: var(--main-font-color);
+    --app-border-color: rgba(255, 255, 255, 0.15);
+    --scrollbar-thumb-color: #1c1b1a;
+  --filter-main-background-color: brightness(140%);
   }
 }
 
 .theme-transition {
   transition: none !important;
+}
+
+.nativeManifestContent {
+  margin: 0;
+  padding: 0 0 1em 1em;
+}
+
+.mozeidonDocInfo {
+  font-size: 0.7em;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.6s ease-in-out ;
+}
+
+.mozeidonDocInfo.visible {
+  opacity: 1;
+  max-height: 500px;
+}
+
+.formDocInfo {
+  margin-left: 1em;
+  font-size: .7em;
+  cursor: default;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1.5em; /* controls spacing between radio buttons */
+  margin: 1em;
+}
+
+.radioGroup label {
+  display: flex;
+  align-items: center;
+  gap: 0.3em; /* spacing between input and label text */
 }

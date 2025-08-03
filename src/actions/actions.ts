@@ -9,6 +9,8 @@ import {
   SWITCH_TAB_COMMAND,
   UPDATE_BOOKMARK_COMMAND,
 } from "../utils/constants"
+import { fetchCustomBrowserManifests } from "../domain/settings/storage"
+import { BrowserManifest } from "../domain/settings/models"
 export async function openURLAction(url: string, browser: string) {
   await Command.create("open-web-browser", ["-a", browser, url]).execute()
 }
@@ -74,4 +76,17 @@ export async function updateBookmarkAction(
       parent,
     ],
   })
+}
+
+export async function getBrowserManifests(): Promise<BrowserManifest[]> {
+  let customManifests = await fetchCustomBrowserManifests()
+  let result: BrowserManifest[] = await invoke(
+    "get_browser_manifests",
+    customManifests.length ? { customManifests } : undefined
+  )
+  return result
+}
+
+export async function getUserHomeDir(): Promise<string> {
+  return await invoke("get_user_home_dir")
 }
