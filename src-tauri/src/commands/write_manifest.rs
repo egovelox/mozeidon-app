@@ -68,11 +68,13 @@ pub async fn get_browser_manifests(
     custom_manifests: Option<Vec<CustomManifest>>,
 ) -> Result<Vec<ManifestWriteResult>, String> {
     let os = OS::current().ok_or("Unsupported platform")?;
+    println!("get_browser_manifests for {:#?}", os);
 
     // Built-in browsers
     let mut results = write_manifests_for_all_browsers(&app, os)
         .map_err(|e| format!("Failed to get built-in browser manifests: {}", e))?;
 
+    println!("{:#?}", results);
     // Handle custom manifests if provided
     if let Some(customs) = custom_manifests {
         for custom in customs {

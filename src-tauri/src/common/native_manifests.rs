@@ -158,9 +158,13 @@ pub fn get_base_user_dir(os: OS, browser: &Browser) -> Option<PathBuf> {
             Browser::Chrome | Browser::Edge => data_local_dir(),
             _ => None,
         },
-        OS::MacOS | OS::Linux => match browser {
+        OS::MacOS => match browser {
             Browser::Firefox => config_dir(),
             Browser::Chrome | Browser::Edge => data_local_dir(),
+            _ => None,
+        },
+        OS::Linux => match browser {
+            Browser::Firefox | Browser::Chrome | Browser::Edge => home_dir(),
             _ => None,
         },
     }
@@ -221,21 +225,55 @@ pub fn write_manifest_file(
 
     let user_dir = get_user_dir_path(os, &browser)?;
 
+    println!("get_user_dir_path : {:#?}", user_dir);
+
     let browser_parent_dir = user_dir
         .parent()
         .ok_or(NativeMessagingError::UserDirNotFound)?;
 
+    println!("browser_parent_dir : {:#?}", browser_parent_dir);
     // Skip if browser is not installed
-    if !browser_parent_dir.exists() {
-        return Ok(ManifestWriteResult {
-            browser,
-            written: false,
-            path: None,
-            content: None,
-        });
+    #[cfg(target_os = "linux")]
+    {
+        if !is_browser_installed_linux(&browser) {
+            println!("{:#?} is considered as not installed", browser);
+            return Ok(ManifestWriteResult {
+                browser,
+                written: false,
+                path: None,
+                content: None,
+            });
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        if !is_browser_installed_windows(&browser) {
+            println!("{:#?} is considered as not installed", browser);
+            return Ok(ManifestWriteResult {
+                browser,
+                written: false,
+                path: None,
+                content: None,
+            });
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if !browser_parent_dir.exists() {
+            println!("{:#?} is considered as not installed", browser);
+            return Ok(ManifestWriteResult {
+                browser,
+                written: false,
+                path: None,
+                content: None,
+            });
+        }
     }
 
     let dest_path = user_dir.join(MANIFEST_FILENAME);
+    println!("dest_path : {:#?}", dest_path);
 
     if dest_path.exists() {
         let existing_content = fs::read_to_string(&dest_path)?;
@@ -307,7 +345,6 @@ pub fn write_manifest_file(
     }
 }
 
-/// Batch write for all browsers
 pub fn write_manifests_for_all_browsers(
     app: &AppHandle,
     os: OS,
@@ -370,4 +407,72 @@ fn is_registry_configured(
     }
 
     Ok(false)
+}
+
+#[cfg(target_os = "linux")]
+fn is_browser_installed_linux(browser: &Browser) -> bool {
+    use which::which;
+
+    // Variants per browser
+    let candidates = match browser {
+        Browser::Firefox => vec![
+            "firefox",
+            "firefox-esr",
+            "firefox-developer",
+            "firefox-developer-edition",
+        ],
+        Browser::Chrome => vec![
+            "google-chrome",
+            "google-chrome-stable",
+            "chrome", // less common but worth checking
+        ],
+        Browser::Edge => vec![
+            "microsoft-edge",
+            "microsoft-edge-stable",
+            "microsoftedge", // rare but exists in some distros
+        ],
+        _ => return false,
+    };
+
+    candidates.iter().any(|&name| which(name).is_ok())
+}
+
+#[cfg(target_os = "windows")]
+fn is_browser_installed_windows(browser: &Browser) -> bool {
+    use std::process::Command;
+
+    // Try `where` first
+    let candidates = match browser {
+        Browser::Firefox => vec!["firefox.exe"],
+        Browser::Chrome => vec!["chrome.exe"],
+        Browser::Edge => vec!["msedge.exe"],
+        _ => return false,
+    };
+
+    for exe in &candidates {
+        if let Ok(output) = Command::new("where").arg(exe).output() {
+            if output.status.success() && !output.stdout.is_empty() {
+                return true;
+            }
+        }
+    }
+
+    // If `where` didn't find anything, check common install paths
+    let common_paths = match browser {
+        Browser::Firefox => vec![
+            r"C:\Program Files\Mozilla Firefox\firefox.exe",
+            r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+        ],
+        Browser::Chrome => vec![
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ],
+        Browser::Edge => vec![
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        ],
+        _ => vec![],
+    };
+
+    common_paths.iter().any(|p| Path::new(p).exists())
 }

@@ -115,7 +115,12 @@ export function AppSettingsJsonEditor({
           {
             string: { color: "" },
             boolean: { color: "" },
-            container: { background: "", fontFamily: "", color: "", cursor: "default" },
+            container: {
+              background: "",
+              fontFamily: "",
+              color: "",
+              cursor: "default",
+            },
             property: { color: "rgba(210, 85, 41, 0.5)" },
             bracket: { color: "", fontWeight: "" },
           },

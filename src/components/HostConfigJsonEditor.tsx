@@ -77,7 +77,7 @@ export function HostConfigJsonEditor({
           <b> • Auto-configured </b>
         </div>
         {autoConfiguredManifests.map((m) => (
-          <NativeManifestJsonEditor manifest={m} key={m.path} />
+          <NativeManifestJsonEditor manifest={m} key={m.path ?? m.browser} />
         ))}
       </div>
       <div className="container">

@@ -29,8 +29,8 @@ export type AppSettings = {
 export type BrowserManifest = {
   browser: string
   written: boolean
-  path: string
-  content: string
+  path?: string
+  content?: string
 }
 
 export type HostConfigurationSettings = {
