@@ -7,20 +7,22 @@ export const WindowShortcutListener = ({
 }: {
   closeWindowCallback: (event: KeyboardEvent) => Promise<void>
 }) => {
-  const { settings } = useSettings()
+  const {
+    settings: { appSettings },
+  } = useSettings()
 
   const handleShortcutCloseMozeidonWindowKeydown = useCallback(
     (event: KeyboardEvent) => {
       const keyCombo = getKeyCombination(event)
       if (
         keyCombo.toLowerCase() ===
-        settings.shortcut_close_mozeidon_window.toLowerCase()
+        appSettings.shortcut_close_panel.toLowerCase()
       ) {
         event.preventDefault()
         closeWindowCallback(event)
       }
     },
-    [settings]
+    [appSettings]
   )
 
   /* Register the shortcut on the window object */

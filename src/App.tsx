@@ -12,7 +12,7 @@ import noWebSearchIcon from "./assets/nowebsearch.svg"
 import "./App.css"
 import { BookmarkItem } from "./domain/bookmarks/models"
 import { BmFormElement } from "./domain/bookmarks/validation"
-import { Settings } from "./domain/settings/models"
+import { AppSettings, Settings } from "./domain/settings/models"
 import { TabItem } from "./domain/tabs/models"
 import { ListContainer } from "./components/List"
 import { WebSearchListContainer } from "./components/WebSearchListContainer"
@@ -212,7 +212,7 @@ function App() {
   }
 
   /* Handle KeyDown */
-  const handleKeyDown = (event: KeyboardEvent, settings: Settings) =>
+  const handleKeyDown = (event: KeyboardEvent, settings: AppSettings) =>
     keyDownHandler({
       event,
       settings,
@@ -421,6 +421,7 @@ function App() {
                       setClosedItems={setClosedItems}
                       context={context}
                       listRef={listRef}
+                      restoreDefaults={restoreDefaults}
                     />
                   ) : (
                     <WebSearchListContainer

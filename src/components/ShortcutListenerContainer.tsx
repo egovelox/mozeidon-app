@@ -1,11 +1,11 @@
 import { KeyboardEvent } from "react"
-import { Settings } from "../domain/settings/models"
+import { AppSettings } from "../domain/settings/models"
 import { useSettings } from "../hooks/useSettings"
 
 type ShortcutListenerContainerProps = {
   handleKeyDown: (
     event: KeyboardEvent<HTMLDivElement>,
-    settings: Settings
+    settings: AppSettings
   ) => Promise<void>
   children: React.ReactNode
 }
@@ -16,7 +16,7 @@ export function ShortcutListenerContainer({
 }: ShortcutListenerContainerProps) {
   const { settings } = useSettings()
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    handleKeyDown(e, settings)
+    handleKeyDown(e, settings.appSettings)
   }
 
   return (

@@ -1,3 +1,5 @@
+use serde::Deserialize;
+use std::{fs, path::PathBuf};
 use tauri::AppHandle;
 
 use crate::common::{
@@ -11,7 +13,7 @@ pub async fn write_manifest(
     browser_str: &str,
 ) -> Result<ManifestWriteResult, String> {
     let os = OS::current().ok_or("Unsupported platform")?;
-    let browser = Browser::from_str(browser_str).ok_or("Invalid browser string")?;
+    let browser = Browser::try_from_str(browser_str).ok_or("Invalid browser string")?;
 
     write_manifest_file(&app, os, browser).map_err(|e| format!("Failed to write manifest: {}", e))
 }
@@ -30,9 +32,9 @@ pub async fn write_custom_manifest(
     content: String,
     browser_str: &str,
 ) -> Result<ManifestWriteResult, String> {
-    let browser = Browser::from_str(browser_str).ok_or("Invalid browser string")?;
+    let browser = Browser::try_from_str(browser_str).ok_or("Invalid browser string")?;
 
-    let base_dir = get_base_user_dir(OS::current().ok_or("Unsupported platform")?, browser)
+    let base_dir = get_base_user_dir(OS::current().ok_or("Unsupported platform")?, &browser)
         .ok_or("Failed to get base user directory")?;
 
     let full_path = base_dir.join(&relative_dir);
@@ -51,4 +53,58 @@ pub async fn write_custom_manifest(
         path: Some(dest_path.to_string_lossy().into_owned()),
         content: Some(content),
     })
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomManifest {
+    pub browser_name: String,
+    pub manifest_relative_dir: String,
+}
+
+#[tauri::command]
+pub async fn get_browser_manifests(
+    app: AppHandle,
+    custom_manifests: Option<Vec<CustomManifest>>,
+) -> Result<Vec<ManifestWriteResult>, String> {
+    let os = OS::current().ok_or("Unsupported platform")?;
+
+    // Built-in browsers
+    let mut results = write_manifests_for_all_browsers(&app, os)
+        .map_err(|e| format!("Failed to get built-in browser manifests: {}", e))?;
+
+    // Handle custom manifests if provided
+    if let Some(customs) = custom_manifests {
+        for custom in customs {
+            let browser = Browser::from_str(&custom.browser_name);
+            let manifest_path = PathBuf::from(&custom.manifest_relative_dir);
+
+            if manifest_path.exists() {
+                match fs::read_to_string(&manifest_path) {
+                    Ok(content_str) => {
+                        results.push(ManifestWriteResult {
+                            browser,
+                            written: false,
+                            path: Some(manifest_path.to_string_lossy().into_owned()),
+                            content: Some(content_str),
+                        });
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "Failed to read custom manifest {}: {}",
+                            custom.manifest_relative_dir, err
+                        );
+                        continue;
+                    }
+                }
+            } else {
+                eprintln!(
+                    "Custom manifest path does not exist: {}",
+                    custom.manifest_relative_dir
+                );
+            }
+        }
+    }
+
+    Ok(results)
 }

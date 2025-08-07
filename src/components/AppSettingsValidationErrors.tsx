@@ -1,6 +1,6 @@
 import { ValidationError } from "../domain/settings/validation"
 
-export function SettingsValidationErrors({
+export function AppSettingsValidationErrors({
   validationErrors,
   onBack,
 }: {

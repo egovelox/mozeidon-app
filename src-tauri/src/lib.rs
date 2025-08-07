@@ -30,6 +30,8 @@ pub fn run() {
             commands::hide,
             commands::write_manifest,
             commands::write_all_manifests,
+            commands::get_browser_manifests,
+            commands::get_user_home_dir,
         ])
         .setup(move |app| {
             #[cfg(target_os = "macos")]

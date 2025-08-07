@@ -10,14 +10,14 @@ type GlobalShortcuts = {
 
 type Shortcuts = {
   shortcut_copy_selected_item_url: string
-  shortcut_close_mozeidon_window: string
-  shortcut_close_a_tab: string
+  shortcut_close_panel: string
+  shortcut_close_item: string
   shortcut_list_down: string
   shortcut_list_up: string
   shortcut_edit_bookmark: string
 }
 
-export type Settings = {
+export type AppSettings = {
   theme: string
   web_browser: string
   web_search_engine_urls: string[]
@@ -26,7 +26,23 @@ export type Settings = {
 } & GlobalShortcuts &
   Shortcuts
 
-export const defaultSettings: Settings = {
+export type BrowserManifest = {
+  browser: string
+  written: boolean
+  path: string
+  content: string
+}
+
+export type HostConfigurationSettings = {
+  browserManifests: BrowserManifest[]
+  userHomeDir: string
+}
+export type Settings = {
+  appSettings: AppSettings
+  hostConfigurationSettings: HostConfigurationSettings
+}
+
+export const defaultSettings: AppSettings = {
   theme: "system",
   web_browser: "firefox",
   web_search_engine_urls: [
@@ -41,14 +57,14 @@ export const defaultSettings: Settings = {
   global_shortcut_show_panel_recently_closed: "",
   global_shortcut_show_panel_history: "",
   shortcut_copy_selected_item_url: "",
-  shortcut_close_mozeidon_window: "Control+x",
-  shortcut_close_a_tab: "Control+l",
+  shortcut_close_panel: "Control+x",
+  shortcut_close_item: "Control+l",
   shortcut_list_down: "ArrowDown",
   shortcut_list_up: "ArrowUp",
   shortcut_edit_bookmark: "Control+m",
 }
 
-export function getGlobalShortcuts(settings: Settings): GlobalShortcuts {
+export function getGlobalShortcuts(settings: AppSettings): GlobalShortcuts {
   return {
     global_shortcut_show_panel_tabs: settings.global_shortcut_show_panel_tabs,
     global_shortcut_show_panel_bookmarks:
@@ -60,11 +76,11 @@ export function getGlobalShortcuts(settings: Settings): GlobalShortcuts {
   }
 }
 
-export function getShortcuts(settings: Settings): Shortcuts {
+export function getShortcuts(settings: AppSettings): Shortcuts {
   return {
     shortcut_copy_selected_item_url: settings.shortcut_copy_selected_item_url,
-    shortcut_close_mozeidon_window: settings.shortcut_close_mozeidon_window,
-    shortcut_close_a_tab: settings.shortcut_close_a_tab,
+    shortcut_close_panel: settings.shortcut_close_panel,
+    shortcut_close_item: settings.shortcut_close_item,
     shortcut_list_up: settings.shortcut_list_up,
     shortcut_list_down: settings.shortcut_list_down,
     shortcut_edit_bookmark: settings.shortcut_edit_bookmark,

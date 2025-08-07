@@ -24,7 +24,9 @@ export interface WebSearchRowProps {
 export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
   /* Adding style attribute is very important here
     it supplies the row height to the elements. */
-  const { settings } = useSettings()
+  const {
+    settings: { appSettings: settings },
+  } = useSettings()
   const isRowSelected = data.selected === index
   const rowDisplay = data.rowDisplay
   const item = data.items[index]
@@ -63,7 +65,7 @@ export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
       }}
     >
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div className={`${selectionClassName}`}>
+        <div className={`${selectionClassName}`} style={{ cursor: "default" }}>
           <TextSelector
             faviconUrl={faviconUrl}
             className="liFirstLine"
@@ -85,7 +87,7 @@ export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
           />
         </div>
       ) : (
-        <div className={`${selectionClassName}`}>
+        <div className={`${selectionClassName}`} style={{ cursor: "default" }}>
           <TextSelector
             faviconUrl={faviconUrl}
             className={"liFirstLineSmall"}

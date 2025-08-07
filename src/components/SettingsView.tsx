@@ -3,8 +3,9 @@ import { useSettings } from "../hooks/useSettings"
 import mozeidonLogo from "../assets/trident.svg"
 import { ValidationError } from "../domain/settings/validation"
 import { VersionRequirements } from "./VersionRequirements"
-import { SettingsJsonEditor } from "./SettingsJsonEditor"
-import { SettingsValidationErrors } from "./SettingsValidationErrors"
+import { AppSettingsJsonEditor } from "./AppSettingsJsonEditor"
+import { AppSettingsValidationErrors } from "./AppSettingsValidationErrors"
+import { HostConfigJsonEditor } from "./HostConfigJsonEditor"
 
 enum NavContext {
   AppSettings = "App settings",
@@ -34,21 +35,27 @@ export function SettingsView({
           return <div className="container">Unexpected error...</div>
         }
         return (
-          <SettingsJsonEditor
+          <AppSettingsJsonEditor
             settings={settings}
             setSettings={setSettings}
             setValidationErrors={setValidationErrors}
           />
         )
       case NavContext.HostConfig:
-        return null
+        return (
+          <HostConfigJsonEditor
+            settings={settings}
+            setSettings={setSettings}
+            setValidationErrors={setValidationErrors}
+          />
+        )
       case NavContext.About:
         return <VersionRequirements />
     }
   }
 
   return validationErrors ? (
-    <SettingsValidationErrors
+    <AppSettingsValidationErrors
       validationErrors={validationErrors}
       onBack={() => setValidationErrors(null)}
     />
@@ -92,20 +99,41 @@ export function SettingsView({
         <nav>
           <ul className="settingsNavbarLinks">
             <li
+              role="tab"
+              tabIndex={navContext === NavContext.AppSettings ? -1 : 0}
               className={navContext === NavContext.AppSettings ? "active" : ""}
               onClick={() => setNavContext(NavContext.AppSettings)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setNavContext(NavContext.AppSettings)
+                }
+              }}
             >
               {NavContext.AppSettings}
             </li>
             <li
+              role="tab"
+              tabIndex={navContext === NavContext.HostConfig ? -1 : 0}
               className={navContext === NavContext.HostConfig ? "active" : ""}
               onClick={() => setNavContext(NavContext.HostConfig)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setNavContext(NavContext.HostConfig)
+                }
+              }}
             >
               {NavContext.HostConfig}
             </li>
             <li
+              role="tab"
+              tabIndex={navContext === NavContext.About ? -1 : 0}
               className={navContext === NavContext.About ? "active" : ""}
               onClick={() => setNavContext(NavContext.About)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setNavContext(NavContext.About)
+                }
+              }}
             >
               {NavContext.About}
             </li>

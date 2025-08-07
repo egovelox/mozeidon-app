@@ -76,17 +76,23 @@ html, body {
 .settingsNavbarLinks li {
   cursor: pointer;
   font-size: 0.95rem;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, border-bottom 0.2s ease;
+  outline: none;
+  padding: 2px;
+  border-radius: 8px;
+  border-bottom: 1px solid transparent; /* Reserve space to prevent layout shift on focus */
 }
 
-.settingsNavbarLinks li:not(.active):hover {
-  color: #d25529;
-  filter: var(--button-focus-filter);
+.settingsNavbarLinks li:not(.active):focus {
+  outline: none;
+  filter: brightness(140%);
+  background-color: var(--selected-background-color);
 }
 
 .settingsNavbarLinks li.active {
-  color: #d25529;
+  color: var(--closed-item-color);
   cursor: default;
+  /*border-bottom: 1px solid rgba(210, 85, 41, 0.6);*/
 }
 
 .svgIcon {
@@ -164,6 +170,11 @@ html, body {
   display: flex;
 }
 
+.rowWithMarginBottom {
+  display: flex;
+  margin-bottom: 1em;
+}
+
 .userNotification {
   opacity: 0;
   transition: opacity 1s ease-in-out;
@@ -184,14 +195,14 @@ html, body {
 .actionLabel {
   margin-left: 10px;
   margin-top: 8px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .actionButton {
   appearance: none;
   border: 1px solid var(--button-border-color);
   box-shadow: var(--button-box-shadow);
-  border-radius: 6px;
+  border-radius: 8px;
   box-sizing: border-box;
   cursor: pointer;
   display: inline-block;
@@ -208,6 +219,10 @@ html, body {
   vertical-align: middle;
   white-space: nowrap;
   word-wrap: break-word;
+}
+
+.actionButtonNoMargin {
+  margin: 0;
 }
 
 .actionButton:hover {
@@ -253,7 +268,7 @@ html, body {
 }
 
 .liBox {
-  border-radius: 6px;
+  border-radius: 8px;
   margin-right: 8px;
   margin-left: 8px;
   border: 1px solid transparent;
@@ -274,7 +289,6 @@ html, body {
   vertical-align: middle;
   width: 1.2em;
   height: 1.2em;
-  filter: brightness(0.7);
   margin-right: 0.5em;
 }
 
@@ -376,12 +390,22 @@ input {
   font-size: .9em;
   color: var(--main-font-color);
   background-color: var(--main-background-color);
-  min-height: 80px;
+  border: 1px solid var(--button-border-color);
   padding: 10px;
+  box-shadow: 0 1px 0 var(--button-border-color);
+}
+
+.editBookmarkInput {
+  min-height: 60px;
 }
 
 .editInput:focus {
   filter: var(--button-focus-filter);
+}
+
+.invalidInput {
+  border: 1px solid var(--closed-item-color);
+  box-shadow: 0 1px 0 var(--closed-item-color);
 }
 
 /* FIX currently must be here, should be on top */
@@ -416,14 +440,14 @@ textarea {
   position: absolute;
   overflow-wrap: break-word;
   word-wrap: break-word; /* Firefox support */
-  top:50%;
+  top: 150%;
   right: 0;
   margin-top: 4px;
   z-index: 999;
   font-size: .8em;
   background: var(--selected-background-color);
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   white-space: pre-wrap;
   max-width: 400px;
 
@@ -447,7 +471,7 @@ textarea {
 
 :root[data-theme="dark"] {
   --main-font-color: #8d948e;
-  --button-border-color: rgba(15, 10, 8, 0.2);
+  --button-border-color: #3a3a3a;
   --main-background-color: #252526;
   --selected-background-color: #1c1b1a;
   --loading-glow-color: #a6a6a6;
@@ -460,7 +484,7 @@ textarea {
   /* will apply only if the user settings have a theme: system */
   :root:not([data-theme]) {
     --main-font-color: #8d948e;
-    --button-border-color: rgba(15, 10, 8, 0.2);
+    --button-border-color: #3a3a3a;
     --main-background-color: #252526;
     --selected-background-color: #1c1b1a;
     --loading-glow-color: #a6a6a6;
@@ -472,4 +496,40 @@ textarea {
 
 .theme-transition {
   transition: none !important;
+}
+
+.nativeManifestContent {
+  margin: 0;
+  padding: 0 0 1em 1em;
+}
+
+.mozeidonDocInfo {
+  font-size: 0.7em;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.6s ease-in-out ;
+}
+
+.mozeidonDocInfo.visible {
+  opacity: 1;
+  max-height: 500px;
+}
+
+.formDocInfo {
+  margin-left: 1em;
+  font-size: .7em;
+  cursor: default;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1.5em; /* controls spacing between radio buttons */
+  margin: 1em;
+}
+
+.radioGroup label {
+  display: flex;
+  align-items: center;
+  gap: 0.3em; /* spacing between input and label text */
 }
