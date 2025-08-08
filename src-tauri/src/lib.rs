@@ -32,6 +32,8 @@ pub fn run() {
             commands::write_all_manifests,
             commands::get_browser_manifests,
             commands::get_user_home_dir,
+            #[cfg(target_os = "linux")]
+            commands::is_wmctrl_installed,
         ])
         .setup(move |app| {
             #[cfg(target_os = "macos")]

@@ -12,7 +12,7 @@ export function NativeManifestJsonEditor({
 }) {
   return (
     <div>
-      <span>
+      <span style={{ fontSize: ".7em" }}>
         &#x2713; <b>{capitalize(manifest.browser)}</b>
       </span>
 

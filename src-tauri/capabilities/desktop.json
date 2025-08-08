@@ -24,8 +24,13 @@
       "identifier": "shell:allow-execute",
       "allow": [
         {
-          "name": "open-web-browser",
+          "name": "open-macos-web-browser",
           "cmd": "open",
+          "args": true
+        },
+        {
+          "name": "open-linux-web-browser",
+          "cmd": "wmctrl",
           "args": true
         }
       ]

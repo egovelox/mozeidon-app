@@ -43,7 +43,6 @@ export function AppSettingsJsonEditor({
       </div>
       <div
         className={`mozeidonDocInfo ${displayAppSettingsInfo ? "visible" : ""}`}
-        style={{ cursor: "default" }}
       >
         <br />
         <span>

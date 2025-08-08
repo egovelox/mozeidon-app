@@ -666,14 +666,6 @@ export const TabRow = ({ index, style, data }: RowProps<TabItem>) => {
           className={`${selectionClassName}`}
           style={{ cursor: "default" }}
           onDoubleClick={handleDoubleClick}
-          //onDoubleClick={async () => {
-          //  await switchTabAction(
-          //    `${item.windowId}:${item.id}`,
-          //    settings.web_browser
-          //  )
-          //  data.restoreDefaults()
-          //  await invoke("hide")
-          //}}
         >
           <div className="rowWithButtons">
             <TextSelector

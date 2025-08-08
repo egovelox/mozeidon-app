@@ -45,6 +45,10 @@ html, body {
   color: var(--main-font-color);
 }
 
+.mozeidonColor {
+  color: var(--closed-item-color);
+}
+
 .settingsNavbar {
   display: flex;
   align-items: center;
@@ -507,6 +511,7 @@ textarea {
 
 .mozeidonDocInfo {
   font-size: 0.7em;
+  cursor: default;
   opacity: 0;
   max-height: 0;
   overflow: hidden;

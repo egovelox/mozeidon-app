@@ -11,8 +11,16 @@ import {
 } from "../utils/constants"
 import { fetchCustomBrowserManifests } from "../domain/settings/storage"
 import { BrowserManifest } from "../domain/settings/models"
+import { getPlatform } from "../utils/getPlatform"
 export async function openURLAction(url: string, browser: string) {
-  await Command.create("open-web-browser", ["-a", browser, url]).execute()
+  switch (getPlatform()) {
+    case "macos":
+      await Command.create("open-macos-web-browser", [
+        "-a",
+        browser,
+        url,
+      ]).execute()
+  }
 }
 
 export async function copyUrlToClipboard(url: string) {
@@ -24,7 +32,16 @@ export async function switchTabAction(itemId: string, browser: string) {
     context: Context.Tabs,
     args: SWITCH_TAB_COMMAND + " " + itemId,
   })
-  await Command.create("open-web-browser", ["-a", browser]).execute()
+  await switchToBrowserWindow(browser)
+}
+
+export async function switchToBrowserWindow(browser: string) {
+  switch (getPlatform()) {
+    case "macos":
+      await Command.create("open-macos-web-browser", ["-a", browser]).execute()
+    case "linux":
+      await Command.create("open-linux-web-browser", ["-xa", browser]).execute()
+  }
 }
 
 export async function closeTabAction(itemId: string) {
