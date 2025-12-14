@@ -1,9 +1,5 @@
-# Swell
+# 🌊 Swell
 
-/!\ WORK IN PROGRESS
+<small>because no swell, no surf.</small>
 
-## Notes
-Package on macOS with `CI=true pnpm tauri build`
-
-Find store settings.json in :
-`$HOME/Library/Application Support/com.egovelox.swell`
+A panel-based UI to browse your tabs, history and bookmarks in waves.
