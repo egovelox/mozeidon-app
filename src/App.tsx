@@ -574,6 +574,7 @@ function App() {
       />
       {context === Context.Settings ? (
         <SettingsView
+          restoreDefaults={restoreDefaults}
           context={context}
           showBackButton={previousContext !== Context.None}
           tabsHandler={tabsHandler}

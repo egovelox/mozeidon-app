@@ -18,6 +18,7 @@ export enum NavContext {
 }
 
 export function SettingsView({
+  restoreDefaults,
   onBackToList,
   showBackButton,
   context,
@@ -27,6 +28,7 @@ export function SettingsView({
   recentlyClosedTabsHandler,
   settingsHandler,
 }: {
+  restoreDefaults: () => void
   onBackToList: () => void
   tabsHandler: (settings: Settings) => Promise<void>
   bookmarksHandler: () => Promise<void>
@@ -76,7 +78,10 @@ export function SettingsView({
       case NavContext.About:
         return (
           <div>
-            <VersionRequirements />
+            <VersionRequirements
+              restoreDefaults={restoreDefaults}
+              webBrowser={settings.appSettings.web_browser}
+            />
           </div>
         )
     }

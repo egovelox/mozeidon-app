@@ -44,7 +44,7 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
     <div>
       <div style={{ marginBottom: "1em" }}>
         <span className="settingsTitle">
-          <b>Browser-window redirection</b>
+          <b>Web-browser window redirection</b>
         </span>
         <span
           className="moreInfo"
@@ -61,9 +61,9 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
         >
           <br />
           A redirection happens when the panel redirects you to your
-          browser-window.
+          browser window.
           <br />
-          E.g when you double-click a tab item in the Swell tabs' panel.
+          E.g when you double-click a tab item in the Swell tabs panel.
           <br />
           <br />
           Internally on your {platform} platform, this redirection is triggered
@@ -74,18 +74,18 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
         {isLinuxPlatform && !isWmctrlInstalled ? (
           <div className="mozeidonDocInfo visible">
             <br />
-            Currently, mozeidon cannot find a{" "}
+            Currently, Swell cannot find a{" "}
             <b className="mozeidonColor">wmctrl</b> command available on your
             device.
             <br />
             <b className="mozeidonColor">Please install it first</b>, in order
-            to enable browser-window redirection !
+            to enable browser window redirection !
           </div>
         ) : (
           <div className="mozeidonDocInfo visible">
             <br />
             Current redirection is set to the{" "}
-            <b className="mozeidonColor"> {webBrowser}</b> browser-window.
+            <b className="mozeidonColor"> {webBrowser}</b> browser window.
             <br />
             By changing the <b>web_browser</b> value in App settings, you can
             redirect to another browser.
@@ -113,7 +113,7 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
                 await switchToBrowserWindow(webBrowser)
               }}
             >
-              Check browser-window redirection
+              Check window redirection
             </button>
           </div>
         )}
