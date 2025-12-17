@@ -56,19 +56,18 @@ export const GroupTabEditor = ({
   ]
   if (!tab) return null
   const handleClickExistingGroup = (groupId: number) => async () => {
-    let listCopy = [...baseItems] as TabItem[]
+    // first of all, remove the tab from the list
+    let listCopy = [...baseItems].filter((t) => t.id !== tab.id) as TabItem[]
     const listSearchableCopy = ([...fuzzyItems] as TabItem[]).filter(
       (_, i) => i !== selectedListIndex
     )
     const groupItemsCopy = [...groupItems]
     const groupIndex = groupItems.findIndex((g) => g.id === groupId)
     const group = groupItemsCopy[groupIndex]
-    if (!group.collapsed) {
-      listCopy = listCopy.filter((t) => t.id !== tab.id)
-    }
     const groupListIndex = (baseItems as TabItem[]).findIndex(
       (t) => t.type === "group" && t.groupId === group.id
     )
+    // check the destination group is valid
     if (!group || !group.tabs.length || groupListIndex === -1) return
 
     // call browser to group Tab

@@ -60,8 +60,8 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
           }`}
         >
           <br />
-          A redirection happens when the panel redirects you to your
-          browser window.
+          A redirection happens when the panel redirects you to your browser
+          window.
           <br />
           E.g when you double-click a tab item in the Swell tabs panel.
           <br />
