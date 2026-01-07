@@ -38,7 +38,7 @@ Note in some scenarios, Swell UI won't be displayed, it acts in the background j
 
 ## 📦 Installation
 
-Latest release ( MacOS and Linux ) : [v1.0.0](https://github.com/egovelox/swell/releases/tag/v1.0.0)
+Latest release ( MacOS and Linux ) : [v0.1.1](https://github.com/egovelox/swell/releases/tag/v0.1.1)
 
 ### What you need
 
