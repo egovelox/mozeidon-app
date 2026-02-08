@@ -1,7 +1,8 @@
-import { useSettings } from "../hooks/useSettings"
 import { useCallback, useEffect } from "react"
-import { getKeyCombination } from "../utils/getKeyCombination"
+
+import { useSettings } from "../hooks/useSettings"
 import { SHORTCUT_HIDE_PANEL } from "../utils/constants"
+import { getKeyCombination } from "../utils/getKeyCombination"
 
 export const WindowShortcutListener = ({
   closeWindowCallback,
@@ -30,10 +31,7 @@ export const WindowShortcutListener = ({
   useEffect(() => {
     window.addEventListener("keydown", handleShortcutCloseMozeidonWindowKeydown)
     return () => {
-      window.removeEventListener(
-        "keydown",
-        handleShortcutCloseMozeidonWindowKeydown
-      )
+      window.removeEventListener("keydown", handleShortcutCloseMozeidonWindowKeydown)
     }
   }, [handleShortcutCloseMozeidonWindowKeydown])
 

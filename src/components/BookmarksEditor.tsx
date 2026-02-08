@@ -1,24 +1,14 @@
-import {
-  forwardRef,
-  RefObject,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react"
-import { BookmarkItem } from "../domain/bookmarks/models"
-import {
-  BmFormElement,
-  isValidBookmark,
-  ValidationError,
-} from "../domain/bookmarks/validation"
-import { FolderIndex } from "../utils/bookmarksFolderIndex"
-import { logEmit } from "../utils/logEmitter"
+import { forwardRef, RefObject, useEffect, useImperativeHandle, useRef, useState } from "react"
 import CreatableSelect from "react-select"
-import { useSettings } from "../hooks/useSettings"
-import { getKeyCombination } from "../utils/getKeyCombination"
 import { components } from "react-select"
+
+import { BookmarkItem } from "../domain/bookmarks/models"
+import { BmFormElement, isValidBookmark, ValidationError } from "../domain/bookmarks/validation"
+import { useSettings } from "../hooks/useSettings"
+import { FolderIndex } from "../utils/bookmarksFolderIndex"
 import { Context } from "../utils/constants"
+import { getKeyCombination } from "../utils/getKeyCombination"
+import { logEmit } from "../utils/logEmitter"
 
 interface EditFormProps {
   onSubmit: React.FormEventHandler<BmFormElement>
@@ -41,16 +31,7 @@ export type EditRefs = {
 }
 
 export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
-  (
-    {
-      onSubmit,
-      onBackToList,
-      selectedItem,
-      bookmarksFolderIndex,
-      context,
-    }: EditFormProps,
-    ref
-  ) => {
+  ({ onSubmit, onBackToList, selectedItem, bookmarksFolderIndex, context }: EditFormProps, ref) => {
     /* A way to pass 3 distinct refs in a forwardRef */
     const editTitleRef = useRef<HTMLTextAreaElement>(null)
     const editUrlRef = useRef<HTMLTextAreaElement>(null)
@@ -61,15 +42,11 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
       editParentRef: editParentRef,
     }))
 
-    const [validationErrors, setValidationErrors] = useState<
-      ValidationError[] | null
-    >(null)
+    const [validationErrors, setValidationErrors] = useState<ValidationError[] | null>(null)
 
     type Option = { value: string; label: string }
     const [folderPathInputValue, setFolderPathInputValue] = useState("")
-    const [folderPathSelected, setFolderPathSelected] = useState<Option | null>(
-      null
-    )
+    const [folderPathSelected, setFolderPathSelected] = useState<Option | null>(null)
 
     // for bookmarks, we display the current folderPath
     useEffect(() => {
@@ -96,9 +73,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             url: { value: url },
             folderPath: { value: folderPath },
           } = e.currentTarget.elements
-          if (
-            isValidBookmark({ title, url, folderPath }, setValidationErrors)
-          ) {
+          if (isValidBookmark({ title, url, folderPath }, setValidationErrors)) {
             logEmit(`folderPath: ${folderPath}`)
             onSubmit(e)
           } else e.preventDefault()
@@ -109,8 +84,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             <span className="mozeidonColor">&#x2605; folder-path</span>
           </label>
           <div className="formDocInfo">
-            ( optional ) The bookmark folder expressed as a path, e.g
-            /articles/health technologies/
+            ( optional ) The bookmark folder expressed as a path, e.g /articles/health technologies/
             <br />
             The folder-path must start with <b>/</b> and must end with <b>/</b>
             <br />
@@ -121,9 +95,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
                 const { selectProps } = props
                 const { inputValue, options } = selectProps
 
-                const matches = options.filter((o: any) =>
-                  o.label.toLowerCase().includes(inputValue.toLowerCase())
-                )
+                const matches = options.filter((o: any) => o.label.toLowerCase().includes(inputValue.toLowerCase()))
 
                 // Hide arrow if no matches OR only one match
                 if (matches.length === 0 || matches.length === 1) return null
@@ -187,16 +159,11 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
                 label: p,
               })) as Option[]
             }
-            filterOption={(option, rawInput) =>
-              option.label.toLowerCase().includes(rawInput.toLowerCase())
-            }
+            filterOption={(option, rawInput) => option.label.toLowerCase().includes(rawInput.toLowerCase())}
             onInputChange={(value, { action }) => {
               if (action === "input-change") {
                 // keep selected if input starts with it
-                if (
-                  !folderPathSelected ||
-                  !value.startsWith(folderPathSelected.label)
-                ) {
+                if (!folderPathSelected || !value.startsWith(folderPathSelected.label)) {
                   setFolderPathSelected(null)
                 }
                 setFolderPathInputValue(value)
@@ -213,12 +180,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
               }
             }}
           />
-          <input
-            tabIndex={-1}
-            type="hidden"
-            name="folderPath"
-            value={folderPathInputValue}
-          />
+          <input tabIndex={-1} type="hidden" name="folderPath" value={folderPathInputValue} />
           <label className="row formLabel" htmlFor="title">
             <span className="mozeidonColor">&#x2605; title</span>
           </label>
@@ -226,11 +188,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             ( optional ) Choose your bookmark title.
             <br />
           </div>
-          <Editable
-            defaultValue={selectedItem.title}
-            id="title"
-            ref={editTitleRef}
-          />
+          <Editable defaultValue={selectedItem.title} id="title" ref={editTitleRef} />
           <label className="row formLabel" htmlFor="url">
             <span className="mozeidonColor">&#x2605; url</span>
           </label>
@@ -243,11 +201,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             <button className="actionButton mozeidonColor" type="submit">
               Save &#x2713;
             </button>
-            <button
-              className="actionButton"
-              id="lastButton"
-              onClick={() => onBackToList()}
-            >
+            <button className="actionButton" id="lastButton" onClick={() => onBackToList()}>
               Back &#8617;
             </button>
           </div>
@@ -264,8 +218,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated for{" "}
-                  <b>{received}</b> !
+                  ❌ <b>{settingName}</b> could not be validated for <b>{received}</b> !
                 </div>
                 <div>{details}</div>
               </div>
@@ -275,9 +228,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
         <div className="actionContainer">
           <button
             className="loopButton"
-            onFocus={() =>
-              document.getElementById("bookmarkdsEditorBackButton")?.focus()
-            }
+            onFocus={() => document.getElementById("bookmarkdsEditorBackButton")?.focus()}
           />
           <button
             autoFocus
@@ -289,9 +240,7 @@ export const BookmarksEditor = forwardRef<EditRefs, EditFormProps>(
           </button>
           <button
             className="loopButton"
-            onFocus={() =>
-              document.getElementById("bookmarkdsEditorBackButton")?.focus()
-            }
+            onFocus={() => document.getElementById("bookmarkdsEditorBackButton")?.focus()}
           />
         </div>
       </div>
@@ -317,13 +266,12 @@ const Editable = forwardRef<HTMLTextAreaElement, EditableProps>(
   }
 )
 
-const handleFocus =
-  (s: string, ref: React.ForwardedRef<HTMLTextAreaElement>) => () => {
-    // Ensure that the caret positioning happens after the focus is applied
-    setTimeout(() => {
-      if (ref && "current" in ref && ref.current) {
-        // Set the caret at the end of the text
-        ref.current.setSelectionRange(s.length, s.length)
-      }
-    }, 0)
-  }
+const handleFocus = (s: string, ref: React.ForwardedRef<HTMLTextAreaElement>) => () => {
+  // Ensure that the caret positioning happens after the focus is applied
+  setTimeout(() => {
+    if (ref && "current" in ref && ref.current) {
+      // Set the caret at the end of the text
+      ref.current.setSelectionRange(s.length, s.length)
+    }
+  }, 0)
+}

@@ -1,125 +1,229 @@
-use std::str::FromStr;
-
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tauri::AppHandle;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
-use crate::commands::models::{BookmarkItem, Chunk, HistoryItem, TabItem, TabsWithGroups};
+use crate::commands::models::{
+    BookmarkItem, Chunk, GroupItem, HistoryItem, ProfileItem, TabItem, TabsWithWindowsAndGroups,
+    WindowItem,
+};
+
+enum MozeidonResult {
+    /// Tabs list
+    Tabs(Vec<TabItem>),
+    /// Bookmarks list
+    Bookmarks(Vec<BookmarkItem>),
+    /// History list
+    History(Vec<HistoryItem>),
+    /// Profiles list
+    Profiles(Vec<ProfileItem>),
+    /// Tabs with groups and windows (tabsWithGroups context)
+    TabsWithGroups {
+        tabs: Vec<TabItem>,
+        groups: Vec<GroupItem>,
+        windows: Vec<WindowItem>,
+    },
+    /// Bookmarks sync confirmation
+    BookmarksSynchronized,
+}
+
+/// Parses a JSON chunk and extends the items vector.
+/// Returns Err if parsing fails.
+fn parse_chunk<T: DeserializeOwned>(line: &str, items: &mut Vec<T>) -> Result<(), String> {
+    let chunk: Chunk<T> = serde_json::from_str(line)
+        .map_err(|e| format!("Failed to parse chunk: {} - line: {}", e, line))?;
+    items.extend(chunk.data);
+    Ok(())
+}
+
+/// Checks if a stderr line contains an error and returns it
+fn check_stderr_error(line_bytes: &[u8]) -> Option<String> {
+    let line = String::from_utf8_lossy(line_bytes);
+    if line.starts_with(r#"{"error""#) {
+        Some(line.into_owned())
+    } else {
+        None
+    }
+}
+
+/// Response struct for tabsWithGroups context - ensures valid JSON output
+#[derive(Serialize)]
+struct TabsWithGroupsResponse {
+    tabs: Vec<TabItem>,
+    groups: Vec<GroupItem>,
+    windows: Vec<WindowItem>,
+}
 
 #[tauri::command]
 pub async fn mozeidon(app: AppHandle, context: String, args: String) -> Result<String, String> {
-    // debug
-    //println!("mozeidon {}", args);
     let args: Vec<&str> = args.split(' ').collect();
-    let sidecar_command = app.shell().sidecar("mozeidon-cli").unwrap();
-    let (mut rx, _) = sidecar_command
+
+    let sidecar_command = app
+        .shell()
+        .sidecar("mozeidon-cli")
+        .map_err(|e| format!("Failed to create sidecar command: {}", e))?;
+
+    let (mut rx, _child) = sidecar_command
         .args(args)
         .spawn()
-        .expect("Failed to spawn sidecar");
+        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
 
-    let res = tauri::async_runtime::spawn(async move {
-        let mut items = Vec::new();
-        let mut groups = Vec::new();
-        let mut is_bookmarks_sync = false;
-        let mut is_tabs_with_groups = false;
-        let mut error = String::from("");
-        let sync_res = String::from("bookmarks_synchronized");
+    // Process based on context
+    // Note: We use tauri::async_runtime::spawn to ensure the async work
+    // runs on Tauri's runtime, which is required for proper cleanup
+    let result = tauri::async_runtime::spawn(async move {
         match context.as_str() {
             "tabs" => {
+                let mut items: Vec<TabItem> = Vec::new();
                 while let Some(event) = rx.recv().await {
-                    if let CommandEvent::Stderr(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        if line.starts_with(r#"{"error""#) {
-                            error = String::from_str(&line).unwrap();
-                        }
-                    } else if let CommandEvent::Stdout(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        let json: Chunk<TabItem> = serde_json::from_str(&line).unwrap();
-                        for item in json.data {
-                            items.push(serde_json::to_string(&item).unwrap());
-                        }
-                    }
-                }
-            }
-            "tabsWithGroups" => {
-                while let Some(event) = rx.recv().await {
-                    if let CommandEvent::Stderr(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        if line.starts_with(r#"{"error""#) {
-                            error = String::from_str(&line).unwrap();
-                        }
-                    } else if let CommandEvent::Stdout(line_bytes) = event {
-                        is_tabs_with_groups = true;
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        let json: TabsWithGroups = serde_json::from_str(&line).unwrap();
-                        for item in json.data {
-                            items.push(serde_json::to_string(&item).unwrap());
-                        }
-                        for item in json.groups {
-                            groups.push(serde_json::to_string(&item).unwrap());
-                        }
-                    }
-                }
-            }
-            "bookmarks" => {
-                while let Some(event) = rx.recv().await {
-                    if let CommandEvent::Stderr(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        if line.starts_with(r#"{"error""#) {
-                            error = String::from_str(&line).unwrap();
-                        }
-                    } else if let CommandEvent::Stdout(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        if line.starts_with(r#"{"data":"bookmarks_synchronized"}"#) {
-                            is_bookmarks_sync = true;
-                        } else {
-                            let json: Chunk<BookmarkItem> = serde_json::from_str(&line).unwrap();
-                            for item in json.data {
-                                items.push(serde_json::to_string(&item).unwrap());
+                    match event {
+                        CommandEvent::Stderr(ref bytes) => {
+                            if let Some(err) = check_stderr_error(bytes) {
+                                return Err(err);
                             }
                         }
+                        CommandEvent::Stdout(bytes) => {
+                            let line = String::from_utf8_lossy(&bytes);
+                            parse_chunk(&line, &mut items)?;
+                        }
+                        _ => {}
                     }
                 }
+                Ok(MozeidonResult::Tabs(items))
             }
-            "history" => {
+
+            "tabsWithGroups" => {
+                let mut tabs: Vec<TabItem> = Vec::new();
+                let mut groups: Vec<GroupItem> = Vec::new();
+                let mut windows: Vec<WindowItem> = Vec::new();
+
                 while let Some(event) = rx.recv().await {
-                    if let CommandEvent::Stderr(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        if line.starts_with(r#"{"error""#) {
-                            error = String::from_str(&line).unwrap();
+                    match event {
+                        CommandEvent::Stderr(ref bytes) => {
+                            if let Some(err) = check_stderr_error(bytes) {
+                                return Err(err);
+                            }
                         }
-                    } else if let CommandEvent::Stdout(line_bytes) = event {
-                        let line = String::from_utf8_lossy(&line_bytes);
-                        let json: Chunk<HistoryItem> = serde_json::from_str(&line).unwrap();
-                        for item in json.data {
-                            items.push(serde_json::to_string(&item).unwrap());
+                        CommandEvent::Stdout(bytes) => {
+                            let line = String::from_utf8_lossy(&bytes);
+                            let data: TabsWithWindowsAndGroups = serde_json::from_str(&line)
+                                .map_err(|e| {
+                                    format!(
+                                        "Failed to parse tabsWithGroups: {} - line: {}",
+                                        e, line
+                                    )
+                                })?;
+                            tabs.extend(data.data);
+                            groups.extend(data.groups);
+                            windows.extend(data.windows);
                         }
+                        _ => {}
                     }
                 }
+                Ok(MozeidonResult::TabsWithGroups {
+                    tabs,
+                    groups,
+                    windows,
+                })
             }
-            _ => {}
-        };
 
-        if error.len() > 0 {
-            return error;
-        }
-        if is_bookmarks_sync {
-            return sync_res;
-        }
-        if is_tabs_with_groups {
-            return format!(
-                r#"{{"tabs": [{}], "groups": [{}]}}"#,
-                items.join(","),
-                groups.join(",")
-            );
-        }
+            "bookmarks" => {
+                let mut items: Vec<BookmarkItem> = Vec::new();
 
-        format!("[{}]", items.join(","))
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stderr(ref bytes) => {
+                            if let Some(err) = check_stderr_error(bytes) {
+                                return Err(err);
+                            }
+                        }
+                        CommandEvent::Stdout(bytes) => {
+                            let line = String::from_utf8_lossy(&bytes);
+                            // Special case: bookmarks sync confirmation
+                            if line.starts_with(r#"{"data":"bookmarks_synchronized"}"#) {
+                                return Ok(MozeidonResult::BookmarksSynchronized);
+                            }
+                            parse_chunk(&line, &mut items)?;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(MozeidonResult::Bookmarks(items))
+            }
+
+            "history" => {
+                let mut items: Vec<HistoryItem> = Vec::new();
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stderr(ref bytes) => {
+                            if let Some(err) = check_stderr_error(bytes) {
+                                return Err(err);
+                            }
+                        }
+                        CommandEvent::Stdout(bytes) => {
+                            let line = String::from_utf8_lossy(&bytes);
+                            parse_chunk(&line, &mut items)?;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(MozeidonResult::History(items))
+            }
+
+            "profiles" => {
+                let mut items: Vec<ProfileItem> = Vec::new();
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stderr(ref bytes) => {
+                            if let Some(err) = check_stderr_error(bytes) {
+                                return Err(err);
+                            }
+                        }
+                        CommandEvent::Stdout(bytes) => {
+                            let line = String::from_utf8_lossy(&bytes);
+                            parse_chunk(&line, &mut items)?;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(MozeidonResult::Profiles(items))
+            }
+
+            other => Err(format!("Unknown context: {}", other)),
+        }
     })
     .await
-    .map_err(|e| format!("Failed to parse mozeidon output: {}", e));
+    .map_err(|e| format!("Task join error: {}", e))??;
 
-    // for debug
-    // println!("mozeidon command result {:?}", res);
-    res
+    // Convert result to JSON string using proper serde serialization
+    // Serializing typed structs directly preserves field order from struct definition
+    match result {
+        MozeidonResult::Tabs(items) => {
+            serde_json::to_string(&items).map_err(|e| format!("Failed to serialize: {}", e))
+        }
+        MozeidonResult::Bookmarks(items) => {
+            serde_json::to_string(&items).map_err(|e| format!("Failed to serialize: {}", e))
+        }
+        MozeidonResult::History(items) => {
+            serde_json::to_string(&items).map_err(|e| format!("Failed to serialize: {}", e))
+        }
+        MozeidonResult::Profiles(items) => {
+            serde_json::to_string(&items).map_err(|e| format!("Failed to serialize: {}", e))
+        }
+        MozeidonResult::TabsWithGroups {
+            tabs,
+            groups,
+            windows,
+        } => {
+            let response = TabsWithGroupsResponse {
+                tabs,
+                groups,
+                windows,
+            };
+            serde_json::to_string(&response)
+                .map_err(|e| format!("Failed to serialize tabsWithGroups: {}", e))
+        }
+        MozeidonResult::BookmarksSynchronized => Ok("bookmarks_synchronized".to_string()),
+    }
 }

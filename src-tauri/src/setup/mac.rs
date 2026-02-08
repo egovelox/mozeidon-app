@@ -1,6 +1,5 @@
 //! credits to: https://github.com/ayangweb/ayangweb-EcoPaste/blob/169323dbe6365ffe4abb64d867439ed2ea84c6d1/src-tauri/src/core/setup/mac.rs
 
-use serde::Serialize;
 use tauri::{App, Emitter, Listener, Manager, WebviewWindow};
 #[allow(deprecated)]
 use tauri_nspanel::{
@@ -53,15 +52,15 @@ pub fn platform(_app: &mut App, main_window: WebviewWindow) {
     delegate.set_listener(Box::new(move |delegate_name: String| {
         match delegate_name.as_str() {
             "window_did_become_key" => {
-                println!("got event did become key");
+                println!("show window event");
                 let _ = app_handle.emit(format!("{}_panel_did_become_key", label).as_str(), ());
             }
             "window_did_resign_key" => {
-                println!("got event did resign key");
+                println!("hide window event");
                 let _ = app_handle.emit(format!("{}_panel_did_resign_key", label).as_str(), ());
             }
             "exit" => {
-                println!("got event");
+                println!("got exit event");
                 let _ = app_handle.emit(format!("{}_panel_did_exit", label).as_str(), ());
                 ()
             }

@@ -1,11 +1,12 @@
 import { Draggable } from "react-beautiful-dnd"
+
+import { Item } from "../domain/ItemModel"
 import { TabItem } from "../domain/tabs/models"
 import { Context } from "../utils/constants"
-import { RowProps } from "./RowProps"
-import { TabRow } from "./RowTab"
 import { BookmarkRow } from "./RowBookmark"
 import { HistoryRow } from "./RowHistory"
-import { Item } from "../domain/ItemModel"
+import { RowProps } from "./RowProps"
+import { TabRow } from "./RowTab"
 
 export function getRows(context: Context) {
   switch (context) {
@@ -18,10 +19,7 @@ export function getRows(context: Context) {
           <Draggable
             isDragDisabled={
               // disable drag group when group is not collapsed
-              (item.type === "group" &&
-                !data.groupItems.some(
-                  (g) => g.id === item.groupId && g.collapsed
-                )) ||
+              (item.type === "group" && !data.groupItems.some((g) => g.id === item.groupId && g.collapsed)) ||
               // disable drag during search
               data.searchTerms.length !== 0
             }
@@ -43,16 +41,8 @@ export function getRows(context: Context) {
     case Context.RecentlyClosed:
       return TabRow as ({ index, style, data }: RowProps<Item>) => JSX.Element
     case Context.Bookmarks:
-      return BookmarkRow as ({
-        index,
-        style,
-        data,
-      }: RowProps<Item>) => JSX.Element
+      return BookmarkRow as ({ index, style, data }: RowProps<Item>) => JSX.Element
     case Context.History:
-      return HistoryRow as ({
-        index,
-        style,
-        data,
-      }: RowProps<Item>) => JSX.Element
+      return HistoryRow as ({ index, style, data }: RowProps<Item>) => JSX.Element
   }
 }

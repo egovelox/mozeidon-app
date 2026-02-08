@@ -6,9 +6,10 @@ pub struct Chunk<T> {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TabsWithGroups {
+pub struct TabsWithWindowsAndGroups {
     pub data: Vec<TabItem>,
     pub groups: Vec<GroupItem>,
+    pub windows: Vec<WindowItem>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -30,7 +31,7 @@ pub struct TabItem {
     pub groupId: i64,
     pub pinned: bool,
     pub lastAccessed: u64,
-    pub index: u64,
+    pub index: i64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -44,6 +45,13 @@ pub struct GroupItem {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[allow(non_snake_case)]
+pub struct WindowItem {
+    pub id: u64,
+    pub isLastFocused: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct HistoryItem {
     pub url: String,
     pub title: String,
@@ -51,4 +59,15 @@ pub struct HistoryItem {
     pub tc: u64,
     pub vc: u64,
     pub t: u64,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[allow(non_snake_case)]
+pub struct ProfileItem {
+    pub profileId: String,
+    pub profileName: String,
+    pub profileAlias: String,
+    pub profileCommandAlias: String,
+    pub profileRank: i64,
+    pub registeredAt: String,
 }

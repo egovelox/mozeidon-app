@@ -1,12 +1,6 @@
-export const Error = ({
-  error,
-  redirectCallback,
-}: {
-  error: string
-  redirectCallback: () => void
-}) => {
+export const Error = ({ error, redirectCallback }: { error: string; redirectCallback: () => void }) => {
   return (
-    <div className="container" style={{ padding: "1em" }}>
+    <div className="errorContainer" style={{ padding: "1em" }}>
       <h4>😢 Error</h4>
       <div>
         <ul>
@@ -15,9 +9,8 @@ export const Error = ({
           </li>
           <br />
           <li>
-            <div>Details : </div>
             <div>
-              <i>{error}</i>
+              <b>Details</b> : <i>{error}</i>
             </div>
           </li>
         </ul>
@@ -29,25 +22,19 @@ export const Error = ({
           <li>
             <div>Please be sure that a web-browser is currently running,</div>
             <div>
-              and that the <b>mozeidon</b> browser-extension is installed and
-              activated.
+              and that the <b>mozeidon</b> browser-extension is installed and activated.
             </div>
           </li>
           <br />
           <li>
-            <div>
-              Please check that the native-manifest is correctly installed on
-              your machine.
-            </div>
+            <div>Please check that the native-manifest is correctly installed on your machine.</div>
             <div>
               See further details in{" "}
               <span id="errorSettingsLink" onClick={redirectCallback}>
-                Settings
+                Settings.
               </span>
             </div>
-            <div>
-              ( Host configuration <b>&gt;</b> Browsers and native-manifests )
-            </div>
+            <div>( Browsers {">"} Browsers and native-manifests )</div>
           </li>
         </ul>
       </div>

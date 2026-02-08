@@ -1,29 +1,22 @@
-import { GroupItem, TabItem } from "../domain/tabs/models"
-import {
-  Context,
-  LIST_CONTAINER_HEIGHT,
-  MULTILINE_ITEM_SIZE,
-  ONELINE_ITEM_SIZE,
-  RowDisplay,
-} from "../utils/constants"
-import { FixedSizeList as List } from "react-window"
-import { getRows } from "./Row"
-import {
-  DragDropContext,
-  DragStart,
-  Droppable,
-  DropResult,
-} from "react-beautiful-dnd"
 import { useEffect, useRef, useState } from "react"
+import { DragDropContext, DragStart, Droppable, DropResult } from "react-beautiful-dnd"
+import { FixedSizeList as List } from "react-window"
+
 import { moveGroupAction, updateTabAction } from "../actions/actions"
-import { getDragAndDropStructure } from "../utils/tabGroups"
-import { reorder } from "../utils/reordering"
-import { TabRow } from "./RowTab"
 import { Items } from "../domain/ItemModel"
+import { ProfileItem } from "../domain/profiles/models"
+import { GroupItem, TabItem } from "../domain/tabs/models"
+import { Context, LIST_CONTAINER_HEIGHT, MULTILINE_ITEM_SIZE, ONELINE_ITEM_SIZE, RowDisplay } from "../utils/constants"
+import { reorder } from "../utils/reordering"
+import { getDragAndDropStructure } from "../utils/tabGroups"
+import { Utils } from "../utils/utils"
+import { getRows } from "./Row"
+import { TabRow } from "./RowTab"
 
 type ListContainerProps = {
   searchInputRef: React.RefObject<HTMLInputElement>
   groupItems: GroupItem[]
+  currentProfile: ProfileItem | undefined
   setGroupItems: React.Dispatch<React.SetStateAction<GroupItem[]>>
   rowDisplay: RowDisplay
   selectedListIndex: number
@@ -42,6 +35,7 @@ type ListContainerProps = {
 
 export function ListContainer({
   searchInputRef,
+  currentProfile,
   groupItems,
   setGroupItems,
   rowDisplay,
@@ -78,8 +72,7 @@ export function ListContainer({
         list: fuzzyItems as TabItem[],
         groups: groupItems,
       })
-      const { list, dragged, droppedOn, takesIndexFrom, direction } =
-        dragAndDropStructure
+      const { list, dragged, droppedOn, takesIndexFrom, direction } = dragAndDropStructure
       const tab = dragged.item
       let movedGroupTargetIndex: number | undefined = undefined
 
@@ -87,9 +80,7 @@ export function ListContainer({
       if (dragged.item.type === "group") {
         const list = fuzzyItems as TabItem[]
         const groups = groupItems
-        const draggedGroupIndex = groups.findIndex(
-          (g) => g.id === dragged.item.groupId
-        )
+        const draggedGroupIndex = Utils.findIndex(groups, dragged.item.groupId)
         if (direction === "dragUp") {
           let toIndex = droppedOn.item.index
           if (droppedOn.item.type === "group") {
@@ -98,13 +89,9 @@ export function ListContainer({
               toIndex = precedingItem.index + 1
               // special case
               if (precedingItem.type === "group") {
-                const precedingItemGroupIndex = groups.findIndex(
-                  (g) => g.id === precedingItem.groupId
-                )
-                const lastIndex =
-                  groups[precedingItemGroupIndex].tabs.length - 1
-                toIndex =
-                  groups[precedingItemGroupIndex].tabs[lastIndex].index + 1
+                const precedingItemGroupIndex = Utils.findIndex(groups, precedingItem.groupId)
+                const lastIndex = groups[precedingItemGroupIndex].tabs.length - 1
+                toIndex = groups[precedingItemGroupIndex].tabs[lastIndex].index + 1
               }
             } else {
               toIndex = 0
@@ -122,9 +109,7 @@ export function ListContainer({
           let toIndex = droppedOn.item.index
 
           if (droppedOn.item.type === "group") {
-            const droppedOnGroupIndex = groups.findIndex(
-              (g) => g.id === droppedOn.item.groupId
-            )
+            const droppedOnGroupIndex = Utils.findIndex(groups, droppedOn.item.groupId)
             const droppedOnGroupTabs = groups[droppedOnGroupIndex].tabs
             // target the index of the last tab of the group
             const lastIndex = droppedOnGroupTabs.length - 1
@@ -144,9 +129,9 @@ export function ListContainer({
         /* dragging a group */
         if (dragged.item.type === "group") {
           if (direction === "dragUp") {
-            await moveGroupAction(dragged.item.groupId, movedGroupTargetIndex!)
+            await moveGroupAction(dragged.item.groupId, movedGroupTargetIndex!, currentProfile)
           } else {
-            await moveGroupAction(dragged.item.groupId, movedGroupTargetIndex!)
+            await moveGroupAction(dragged.item.groupId, movedGroupTargetIndex!, currentProfile)
           }
         } else if (
           /*
@@ -165,24 +150,24 @@ export function ListContainer({
             list[droppedOn.position].type === "tab" &&
             list[droppedOn.position].groupId !== -1)
         ) {
-          const group = groupItems.find(
-            (g) => g.id === list[droppedOn.position].groupId
-          )
+          const group = groupItems.find((g) => g.id === list[droppedOn.position].groupId)
           /*
            * Our goal is to place the tab at the open group first position.
            * Nonetheless we first update the index, or else Chrome, when dragUp,
            * would place the tab at the open group last position :(
            */
-          await updateTabAction(tab.id, tab.windowId, {
+          await updateTabAction(currentProfile, tab.id, tab.windowId, {
             tabIndex: takesIndexFrom.index,
           })
-          await updateTabAction(tab.id, tab.windowId, { groupId: group?.id })
+          await updateTabAction(currentProfile, tab.id, tab.windowId, {
+            groupId: group?.id,
+          })
           if (tab.pinned) {
             tab.pinned = false
           }
         } else if (tab.pinned && droppedOn.position > lastPinnedTabIndex) {
           // unpin a pinned tab if it has been dropped among unpinned tabs
-          await updateTabAction(tab.id, tab.windowId, {
+          await updateTabAction(currentProfile, tab.id, tab.windowId, {
             tabIndex: takesIndexFrom.index,
             shouldBeUngrouped: dragged.shouldBeUngrouped,
             pin: false,
@@ -190,13 +175,13 @@ export function ListContainer({
           tab.pinned = false
         } else if (!tab.pinned && droppedOn.position <= lastPinnedTabIndex) {
           // pin an unpinned tab if it has been dropped among pinned tabs
-          await updateTabAction(tab.id, tab.windowId, {
+          await updateTabAction(currentProfile, tab.id, tab.windowId, {
             tabIndex: takesIndexFrom.index,
             pin: true,
           })
           tab.pinned = true
         } else {
-          await updateTabAction(tab.id, tab.windowId, {
+          await updateTabAction(currentProfile, tab.id, tab.windowId, {
             tabIndex: takesIndexFrom.index,
             shouldBeUngrouped: dragged.shouldBeUngrouped,
           })
@@ -218,10 +203,7 @@ export function ListContainer({
       setFuzzyItems(newList)
       setBaseItems(newList)
       window.clickCoordinateY = mouseLocationY
-      if (
-        removedGroupHeaderPosition !== undefined &&
-        droppedOn.position > removedGroupHeaderPosition
-      ) {
+      if (removedGroupHeaderPosition !== undefined && droppedOn.position > removedGroupHeaderPosition) {
         setSelectedListIndex(droppedOn.position - 1)
       } else {
         setSelectedListIndex(droppedOn.position)
@@ -254,12 +236,8 @@ export function ListContainer({
 
     // all lines below, to avoid dragging a group into another group
     const destinationItem = (fuzzyItems as TabItem[])[result.destination.index]
-    const nextToDestinationItem = (fuzzyItems as TabItem[])[
-      result.destination.index + 1
-    ]
-    const destinationItemUncollapsedGroup = groupItems.find(
-      (g) => g.id === destinationItem.groupId && !g.collapsed
-    )
+    const nextToDestinationItem = (fuzzyItems as TabItem[])[result.destination.index + 1]
+    const destinationItemUncollapsedGroup = groupItems.find((g) => g.id === destinationItem.groupId && !g.collapsed)
 
     // cancel drag
     if (!sourceItem || !destinationItem) {
@@ -294,6 +272,7 @@ export function ListContainer({
 
   const props = {
     searchInputRef,
+    currentProfile,
     setItems: setFuzzyItems,
     setBaseItems,
     setGroupItems,
@@ -312,10 +291,7 @@ export function ListContainer({
   }
 
   return isSearchNotFound || isUserWebSearch ? null : (
-    <DragDropContext
-      onBeforeDragStart={onBeforeDragStart}
-      onDragEnd={onDragEnd}
-    >
+    <DragDropContext onBeforeDragStart={onBeforeDragStart} onDragEnd={onDragEnd}>
       <Droppable
         droppableId="droppable"
         mode="virtual"
@@ -336,13 +312,9 @@ export function ListContainer({
             ref={listRef}
             className="customScrollBar"
             height={LIST_CONTAINER_HEIGHT}
-            overscanCount={5}
+            overscanCount={20}
             itemCount={fuzzyItems.length}
-            itemSize={
-              rowDisplay === RowDisplay.MultiLine
-                ? MULTILINE_ITEM_SIZE
-                : ONELINE_ITEM_SIZE
-            }
+            itemSize={rowDisplay === RowDisplay.MultiLine ? MULTILINE_ITEM_SIZE : ONELINE_ITEM_SIZE}
             width={"100%"}
             outerRef={provided.innerRef}
             itemData={props}

@@ -2,8 +2,10 @@ use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager,
+    AppHandle, Emitter,
 };
+#[allow(unused_imports)]
+use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_nspanel::ManagerExt;
 

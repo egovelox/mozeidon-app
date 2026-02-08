@@ -23,15 +23,15 @@ const DIR_WINDOWS_FIREFOX: &str = r"Mozilla\NativeMessagingHosts";
 const DIR_WINDOWS_CHROME: &str = r"Google\Chrome\NativeMessagingHosts";
 const DIR_WINDOWS_EDGE: &str = r"Microsoft\Edge\NativeMessagingHosts";
 
-const PATH_PLACEHOLDER: &str = "__NATIVE_HOST_EXECUTABLE_PATH__";
-const NATIVE_HOST_NAME: &str = "mozeidon-native-app";
+pub const PATH_PLACEHOLDER: &str = "__NATIVE_HOST_EXECUTABLE_PATH__";
+pub const NATIVE_HOST_NAME: &str = "mozeidon-native-app";
 
-const MANIFEST_FIREFOX: &str = "firefox_native_manifest.json";
-const MANIFEST_CHROME: &str = "chrome_native_manifest.json";
-const MANIFEST_EDGE: &str = MANIFEST_CHROME;
+pub const MANIFEST_FIREFOX: &str = "firefox_native_manifest.json";
+pub const MANIFEST_CHROME: &str = "chrome_native_manifest.json";
 pub const MANIFEST_FILENAME: &str = "mozeidon.json";
 
 #[derive(Debug, Clone, Copy, Serialize)]
+#[allow(dead_code)]
 pub enum OS {
     MacOS,
     Linux,
@@ -65,6 +65,12 @@ pub enum Browser {
     Chrome,
     Edge,
     Custom(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum BrowserFamily {
+    Firefox,
+    Chromium,
 }
 
 impl Serialize for Browser {
@@ -109,6 +115,22 @@ impl Browser {
     }
 }
 
+impl BrowserFamily {
+    pub fn try_from_str(s: String) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "firefox" => Some(BrowserFamily::Firefox),
+            "chromium" => Some(BrowserFamily::Chromium),
+            _ => None,
+        }
+    }
+    pub fn to_string(&self) -> String {
+        match self {
+            BrowserFamily::Firefox => String::from("firefox"),
+            BrowserFamily::Chromium => String::from("chromium"),
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum NativeMessagingError {
     #[error("User directory not found")]
@@ -116,6 +138,9 @@ pub enum NativeMessagingError {
 
     #[error("Failed to resolve resource path: {0}")]
     ResourceResolveError(String),
+
+    #[error("Forbidden resource path: {0}")]
+    ForbiddenError(String),
 
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
@@ -170,11 +195,6 @@ pub fn get_base_user_dir(os: OS, browser: &Browser) -> Option<PathBuf> {
     }
 }
 
-pub fn get_user_home_dir() -> String {
-    let home = home_dir();
-    home.unwrap_or_default().to_string_lossy().into_owned()
-}
-
 pub fn get_user_dir_path(os: OS, browser: &Browser) -> Result<PathBuf, NativeMessagingError> {
     let base = get_base_user_dir(os, browser).ok_or(NativeMessagingError::UserDirNotFound)?;
     let subdir = get_dir_name(os, browser)?;
@@ -193,7 +213,7 @@ pub fn get_resource_manifest_path(
         .map_err(|e| NativeMessagingError::ResourceResolveError(e.to_string()))
 }
 
-fn get_sidecar_path(_app: &AppHandle, sidecar_name: &str) -> Result<PathBuf, io::Error> {
+pub fn get_sidecar_path(_app: &AppHandle, sidecar_name: &str) -> Result<PathBuf, io::Error> {
     let exe_dir = current_exe()?
         .parent()
         .map(|p| p.to_path_buf())
@@ -210,6 +230,70 @@ pub struct ManifestWriteResult {
     pub written: bool,
     pub path: Option<String>,
     pub content: Option<String>,
+}
+
+pub fn delete_custom_manifest_file(
+    _app: &AppHandle,
+    native_manifest_path: String,
+) -> Result<(), NativeMessagingError> {
+    let manifest_path = PathBuf::from(&native_manifest_path);
+    if !manifest_path.ends_with("NativeMessagingHosts/mozeidon.json") {
+        return Err(NativeMessagingError::ForbiddenError(String::from(
+            "The native manifest path must end with NativeMessagingHosts/mozeidon.json",
+        )));
+    }
+    fs::remove_file(&manifest_path)?;
+    Ok(())
+}
+
+pub fn write_custom_manifest_file(
+    app: &AppHandle,
+    native_manifest_dir: String,
+    browser: BrowserFamily,
+) -> Result<ManifestWriteResult, NativeMessagingError> {
+    let mut manifest_path = PathBuf::from(&native_manifest_dir);
+
+    if !manifest_path.ends_with("NativeMessagingHosts") {
+        return Err(NativeMessagingError::ForbiddenError(String::from(
+            "The directory path must end with NativeMessagingHosts",
+        )));
+    }
+    manifest_path.push(MANIFEST_FILENAME);
+
+    let parent_dir = manifest_path
+        .parent()
+        .ok_or(NativeMessagingError::ResourceResolveError(
+            native_manifest_dir,
+        ))?;
+
+    let manifest_filename = match browser {
+        BrowserFamily::Firefox => MANIFEST_FIREFOX,
+        BrowserFamily::Chromium => MANIFEST_CHROME,
+    };
+    let manifest_template_path = get_resource_manifest_path(&app, manifest_filename)?;
+    let manifest_contents = fs::read_to_string(&manifest_template_path)?;
+    let sidecar_path = get_sidecar_path(&app, NATIVE_HOST_NAME)?;
+
+    let processed_contents =
+        manifest_contents.replace(PATH_PLACEHOLDER, &sidecar_path.to_string_lossy());
+
+    if !parent_dir.exists() {
+        // Optionally, you can create missing parent directories
+        fs::create_dir_all(parent_dir)?;
+    }
+    fs::write(&manifest_path, &processed_contents)?;
+
+    // Minify JSON for the response (remove newlines and extra whitespace)
+    let minified_contents = serde_json::from_str::<serde_json::Value>(&processed_contents)
+        .map(|v| serde_json::to_string(&v).unwrap_or(processed_contents.clone()))
+        .unwrap_or(processed_contents);
+
+    Ok(ManifestWriteResult {
+        browser: Browser::Custom(browser.to_string()),
+        written: true,
+        path: Some(manifest_path.to_string_lossy().into_owned()),
+        content: Some(minified_contents),
+    })
 }
 
 /// Only writes manifest if browser appears installed (based on parent dir existence)

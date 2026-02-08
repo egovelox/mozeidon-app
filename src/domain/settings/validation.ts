@@ -1,6 +1,7 @@
 import * as v from "valibot"
-import { getGlobalShortcuts, getShortcuts } from "./models"
+
 import { INACTIVE_SHORTCUT_VALUE } from "../../utils/constants"
+import { AppSettings, getGlobalShortcuts, getShortcuts } from "./models"
 
 export type ValidationError = {
   settingName: string
@@ -16,10 +17,7 @@ const localeValidator = v.custom<string>((input) => {
     return false
   }
 }, "Invalid locale string")
-const OptionalLocale = v.union([
-  v.literal(""),
-  v.pipe(v.string(), localeValidator),
-])
+const OptionalLocale = v.union([v.literal(""), v.pipe(v.string(), localeValidator)])
 const GlobalShortcutRegex = v.pipe(
   v.string(),
   v.regex(
@@ -38,14 +36,9 @@ const ShortcutRegex = v.pipe(
 
 const GlobalShortcut = v.union([v.literal(""), GlobalShortcutRegex])
 const Shortcut = v.union([v.literal(""), ShortcutRegex])
-const WebSearchUrl = v.pipe(
-  v.string(),
-  v.nonEmpty("Please enter your url."),
-  v.url("The url is badly formatted.")
-)
+const WebSearchUrl = v.pipe(v.string(), v.nonEmpty("Please enter your url."), v.url("The url is badly formatted."))
 
 export const SettingsSchema = v.object({
-  web_browser: v.string(),
   global_shortcut_show_panel_tabs: GlobalShortcut,
   global_shortcut_show_panel_bookmarks: GlobalShortcut,
   global_shortcut_show_panel_recently_closed: GlobalShortcut,
@@ -57,6 +50,8 @@ export const SettingsSchema = v.object({
   shortcut_close_item: Shortcut,
   shortcut_list_down: Shortcut,
   shortcut_list_up: Shortcut,
+  shortcut_next_tab: Shortcut,
+  shortcut_previous_tab: Shortcut,
   shortcut_edit_bookmark: Shortcut,
   shortcut_copy_selected_item_url: Shortcut,
   theme: v.union([v.literal("system"), v.literal("dark"), v.literal("light")]),
@@ -67,9 +62,7 @@ export const SettingsSchema = v.object({
 
 export function validateSettingsForm(
   newData: unknown,
-  setValidationErrors: React.Dispatch<
-    React.SetStateAction<ValidationError[] | null>
-  >
+  setValidationErrors: React.Dispatch<React.SetStateAction<ValidationError[] | null>>
 ) {
   const result = v.safeParse(SettingsSchema, newData)
   if (!result.success) {
@@ -98,21 +91,21 @@ export function validateSettingsForm(
   }
 
   const settings = result.output
-  const shortcuts = getShortcuts(settings)
-  const globalShortcuts = getGlobalShortcuts(settings)
+  /* settings variable here actually contains only visible settings :
+   * custom_browser_manifests field will be missing,
+   * nonetheless here we can safely use:
+   * as AppSettings
+   */
+  const shortcuts = getShortcuts(settings as AppSettings)
+  const globalShortcuts = getGlobalShortcuts(settings as AppSettings)
   const allShortcuts = { ...shortcuts, ...globalShortcuts }
 
   // check that there is no duplicates in shortcuts
   if (
-    new Set(
-      Object.values(allShortcuts).filter((v) => v !== INACTIVE_SHORTCUT_VALUE)
-    ).size !==
-    Object.values(allShortcuts).filter((v) => v !== INACTIVE_SHORTCUT_VALUE)
-      .length
+    new Set(Object.values(allShortcuts).filter((v) => v !== INACTIVE_SHORTCUT_VALUE)).size !==
+    Object.values(allShortcuts).filter((v) => v !== INACTIVE_SHORTCUT_VALUE).length
   ) {
-    setValidationErrors([
-      { settingName: "duplicates", details: "", received: "" },
-    ])
+    setValidationErrors([{ settingName: "duplicates", details: "", received: "" }])
     return ""
   }
 }

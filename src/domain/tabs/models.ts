@@ -29,6 +29,11 @@ export type Group = {
   collapsed: boolean
 }
 
+export type Window = {
+  id: number
+  isLastFocused: boolean
+}
+
 export type Tab = {
   id: number
   domain: string
@@ -44,4 +49,5 @@ export type Tab = {
 export type TabsWithGroups = {
   tabs: Tab[]
   groups: Group[]
+  windows: Window[]
 }

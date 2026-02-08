@@ -4,6 +4,8 @@
 
 A panel-based UI to browse your tabs, history and bookmarks in waves.
 
+Unified control on multiple web-browsers and/or profiles and/or browser-windows.
+
 [Swell](https://github.com/egovelox/swell) turns a browser-control CLI called [mozeidon](https://github.com/egovelox/mozeidon) into a panel-based UI. 🚀 
 
 <img width="600" height="686" alt="swell_tabs_panel" src="https://github.com/user-attachments/assets/667b08c6-f61f-4fef-a6b8-df42113d1038" />
@@ -11,7 +13,7 @@ A panel-based UI to browse your tabs, history and bookmarks in waves.
 
 ## 🏄 What you can do
 
-From anywhere on your device, **control and switch to your web-browser** :
+From anywhere on your device, you can **control and switch to your web-browsers** :
 <br>
 
 - list your tabs, drag and drop to reorder them, and close one, or switch to one, or pin/unpin, or group one, etc
@@ -23,14 +25,17 @@ From anywhere on your device, **control and switch to your web-browser** :
 - list your recently-closed tabs, open one
 <br><br>
 - fire a web-search on your favorite engine like in the URL bar
+<br><br>
+- switch to another browser, profile, or window.
 
 <br>
-Note in some scenarios, Swell UI won't be displayed, it acts in the background just like an os-shortcut controlling your browser :
-<br><br>
+In some scenarios, Swell acts in the background ( no UI ).  
 
-- define your global shortcut to switch to the previous visited tab.
+It's just an os-shortcut controlling your browsers. You can
 <br><br>
-- define your global shortcut to close the current tab.
+- define your global shortcuts to switch to the previous/next visited tab.
+<br><br>
+- define your global shortcut to close the current active tab.
 
 <br>
 🌊 Defining your own shorcuts is a bless ! 🌊
@@ -38,7 +43,7 @@ Note in some scenarios, Swell UI won't be displayed, it acts in the background j
 
 ## 📦 Installation
 
-Latest release ( MacOS and Linux ) : [v0.1.1](https://github.com/egovelox/swell/releases/tag/v0.1.1)
+Latest release ( MacOS and Linux ) : [v0.2.0](https://github.com/egovelox/swell/releases/tag/v0.2.0)
 
 ### What you need
 
@@ -48,9 +53,6 @@ Latest release ( MacOS and Linux ) : [v0.1.1](https://github.com/egovelox/swell/
   ✅ Swell should work directly with Firefox, Chrome, Edge  
   and with other derived browsers like Zen, Arc, Brave, etc ( requires you to create a native-manifest, see Swell Host-configuration settings ).  
   ⚠️ Swell cannot work for Safari browser.  
-  ⚠️ You cannot use Swell on multiple browser-windows or profiles at the same time.  
-  ⚠️ You cannot use Swell on multiple browsers at the same time.   
-    Make sure the extension is active in only one browser.  
 
 - Linux users only : install [wmctrl](https://en.wikipedia.org/wiki/Wmctrl) or you won't be able to switch to the browser window.
 - install the app using the latest [Swell release](https://github.com/egovelox/swell/releases) based on your distribution ( Linux or MacOS ) 
@@ -94,7 +96,6 @@ Nonetheless, you might be interested in the underlying settings file :
 {
   "custom_browser_manifests": [],
   "app_settings": {
-    "date_locale": "en-EN",
     "global_shortcut_close_current_tab": "",
     "global_shortcut_show_panel_bookmarks": "",
     "global_shortcut_show_panel_history": "",
@@ -108,12 +109,13 @@ Nonetheless, you might be interested in the underlying settings file :
     "shortcut_hide_panel": "",
     "shortcut_list_down": "",
     "shortcut_list_up": "",
+    "shortcut_next_tab": "",
+    "shortcut_previous_tab": "",
     "show_favicons": true,
     "theme": "system",
-    "web_browser": "firefox",
+    "date_locale": "en-EN",
     "web_search_engine_urls": [
-      "https://www.google.com/search?q=",
-      "https://addons.mozilla.org/en-US/firefox/search/?q="
+      "https://www.google.com/search?q="
     ]
   }
 }
@@ -124,7 +126,6 @@ Nonetheless, you might be interested in the underlying settings file :
 {
   "custom_browser_manifests": [],
   "app_settings": {
-    "date_locale": "en-EN",
     "global_shortcut_close_current_tab": "Control+p",
     "global_shortcut_show_panel_bookmarks": "Control+w",
     "global_shortcut_show_panel_history": "Control+3",
@@ -138,9 +139,11 @@ Nonetheless, you might be interested in the underlying settings file :
     "shortcut_hide_panel": "Control+c",
     "shortcut_list_down": "Control+j",
     "shortcut_list_up": "Control+k",
+    "shortcut_next_tab": "Control+Shift+J",
+    "shortcut_previous_tab": "Control+Shift+K",
     "show_favicons": true,
     "theme": "light",
-    "web_browser": "Google Chrome",
+    "date_locale": "en-EN",
     "web_search_engine_urls": [
       "https://www.google.com/search?q=",
       "https://addons.mozilla.org/en-US/firefox/search/?q="

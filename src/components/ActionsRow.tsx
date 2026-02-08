@@ -1,20 +1,16 @@
-import { useState } from "react"
+import { useState, ComponentType, SVGProps } from "react"
+
+type SvgIcon = ComponentType<SVGProps<SVGSVGElement>>
 
 interface ActionsRowProps {
   actionName: string
   action: () => Promise<void>
-  image: string
+  Icon: SvgIcon
   id?: string
   addClassName?: string
 }
 
-export const ActionsRow = ({
-  action,
-  id,
-  image,
-  actionName,
-  addClassName,
-}: ActionsRowProps) => {
+export const ActionsRow = ({ action, id, Icon, actionName, addClassName }: ActionsRowProps) => {
   const handleOnKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key.toLowerCase() === "enter") {
       e.stopPropagation()
@@ -25,9 +21,7 @@ export const ActionsRow = ({
   const [isOnFocus, setIsOnFocus] = useState(false)
 
   return (
-    <div
-      className={`actionsRowButtonContainer ${isOnFocus ? " actionsRowButtonContainerFocus" : ""}`}
-    >
+    <div className={`actionsRowButtonContainer ${isOnFocus ? " actionsRowButtonContainerFocus" : ""}`}>
       <button
         id={id}
         title={actionName}
@@ -43,13 +37,7 @@ export const ActionsRow = ({
         onPointerOver={() => setIsOnFocus(true)}
         onPointerLeave={() => setIsOnFocus(false)}
       >
-        <img
-          draggable={false}
-          className={`svgIcon ${addClassName ?? ""}`}
-          src={image}
-          title={actionName}
-          alt={actionName}
-        />
+        <Icon className={`svgIcon ${addClassName ?? ""}`} aria-label={actionName} />
       </button>
     </div>
   )

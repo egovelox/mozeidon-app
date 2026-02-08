@@ -4,9 +4,9 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
 const MOZEIDON_CLI_RELEASE_URL: &str =
-    "https://github.com/egovelox/mozeidon/releases/download/v3.0.0";
+    "https://github.com/egovelox/mozeidon/releases/download/v4.0.0";
 const MOZEIDON_NATIVE_APP_RELEASE_URL: &str =
-    "https://github.com/egovelox/mozeidon-native-app/releases/download/v1.0.0";
+    "https://github.com/egovelox/mozeidon-native-app/releases/download/v4.0.0";
 
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());

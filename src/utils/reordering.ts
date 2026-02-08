@@ -1,6 +1,7 @@
 import { GroupItem, TabItem } from "../domain/tabs/models"
 import { logEmit } from "../utils/logEmitter"
 import { DragAndDropStructure, DragDirection } from "../utils/tabGroups"
+import { Utils } from "./utils"
 
 export function reorder({
   list: listItems,
@@ -26,10 +27,7 @@ export function reorder({
   // when the moved tab is moved from the list in the first position of a group
   // and when predecessorGroupedTab is not correct
   const droppedOnOpenedGroup = groupItems.find(
-    (g) =>
-      droppedOn.item.type === "group" &&
-      g.id === droppedOn.item.groupId &&
-      !g.collapsed
+    (g) => droppedOn.item.type === "group" && g.id === droppedOn.item.groupId && !g.collapsed
   )
 
   if (movedTab.type === "group") {
@@ -42,22 +40,15 @@ export function reorder({
     })
   } else if (direction === "dragDown" && droppedOnOpenedGroup !== undefined) {
     logEmit(`branch #1.1 with newIndex ${newIndex}`)
-    let groups = [...groupItems]
     const movedTabWasInsideAGroup = movedTab.groupId !== -1
-    let movedTabGroupIndex = movedTabWasInsideAGroup
-      ? groupItems.findIndex((g) => g.id === movedTab.groupId)
-      : -1
+    let movedTabGroupIndex = movedTabWasInsideAGroup ? Utils.findIndex(groupItems, movedTab.groupId) : -1
     if (movedTabGroupIndex !== -1) {
-      groupItems[movedTabGroupIndex].tabs = groupItems[
-        movedTabGroupIndex
-      ].tabs.filter((t) => t.id !== movedTab.id)
+      groupItems[movedTabGroupIndex].tabs = groupItems[movedTabGroupIndex].tabs.filter((t) => t.id !== movedTab.id)
     }
     movedTab.index = newIndex
     movedTab.groupId = droppedOnOpenedGroup.id
     movedTab.groupTitle = droppedOnOpenedGroup.title
-    let groupIndex = groupItems.findIndex(
-      (g) => g.id === droppedOnOpenedGroup.id
-    )
+    let groupIndex = Utils.findIndex(groupItems, droppedOnOpenedGroup.id)
     let g: TabItem[] = []
     g = [...groupItems[groupIndex].tabs, movedTab] as TabItem[]
     const newGroups = [...groupItems]
@@ -74,13 +65,9 @@ export function reorder({
   else if (!dragged.shouldBeUngrouped) {
     logEmit("branch #1")
     const groupedTabs = groupItems.flatMap((g) => g.tabs)
-    const groupSourceIndex = groupItems.findIndex(
-      (g) => g.id === movedTab.groupId
-    )
+    const groupSourceIndex = Utils.findIndex(groupItems, movedTab.groupId)
     const predecessorGroupedTab = groupedTabs.find((t) => t.index === newIndex)
-    const groupDestIndex = groupItems.findIndex(
-      (g) => g.id === predecessorGroupedTab?.groupId
-    )
+    const groupDestIndex = Utils.findIndex(groupItems, predecessorGroupedTab?.groupId)
     // when the moved tab is moved from a group in the inside of another group
     if (
       predecessorGroupedTab !== undefined &&
@@ -97,9 +84,7 @@ export function reorder({
       const newGroups = [...groupItems]
       newGroups[groupDestIndex].tabs = g
       // at last remove the movedTab from the source group
-      newGroups[groupSourceIndex].tabs = groupItems[
-        groupSourceIndex
-      ].tabs.filter((t) => t.id !== movedTab.id)
+      newGroups[groupSourceIndex].tabs = groupItems[groupSourceIndex].tabs.filter((t) => t.id !== movedTab.id)
 
       return getOrdered({
         newIndex,
@@ -113,12 +98,7 @@ export function reorder({
       movedTab.index = newIndex
       logEmit(`branch #2.1 with newIndex ${newIndex}`)
       let g: TabItem[] = []
-      g = [
-        ...groupItems[groupSourceIndex].tabs.filter(
-          (t) => t.id !== movedTab.id
-        ),
-        movedTab,
-      ] as TabItem[]
+      g = [...groupItems[groupSourceIndex].tabs.filter((t) => t.id !== movedTab.id), movedTab] as TabItem[]
       const newGroups = [...groupItems]
       newGroups[groupSourceIndex].tabs = g
       return getOrdered({
@@ -134,9 +114,7 @@ export function reorder({
       movedTab.index = newIndex
       movedTab.groupId = predecessorGroupedTab.groupId
       movedTab.groupTitle = predecessorGroupedTab.groupTitle
-      let groupIndex = groupItems.findIndex(
-        (g) => g.id === predecessorGroupedTab.groupId
-      )
+      let groupIndex = Utils.findIndex(groupItems, predecessorGroupedTab.groupId)
       let g: TabItem[] = []
       g = [...groupItems[groupIndex].tabs, movedTab] as TabItem[]
       const newGroups = [...groupItems]
@@ -153,16 +131,12 @@ export function reorder({
       // when the moved tab is moved out of a group
     } else if (movedTab.groupId !== -1) {
       logEmit("branch #3.1")
-      let groupIndex = groupItems.findIndex((g) => g.id === movedTab.groupId)
+      let groupIndex = Utils.findIndex(groupItems, movedTab.groupId)
       movedTab.index = newIndex
       movedTab.groupId = -1
       movedTab.groupTitle = undefined
-      let movedTabIndex = groupItems[groupIndex].tabs.findIndex(
-        (t) => t.id === movedTab.id
-      )
-      const g: TabItem[] = groupItems[groupIndex].tabs.filter(
-        (_, i) => i !== movedTabIndex
-      )
+      let movedTabIndex = Utils.findIndex(groupItems[groupIndex].tabs, movedTab.id)
+      const g: TabItem[] = groupItems[groupIndex].tabs.filter((_, i) => i !== movedTabIndex)
       const newGroups = [...groupItems]
       newGroups[groupIndex].tabs = g
       return getOrdered({
@@ -188,16 +162,12 @@ export function reorder({
     // when the moved tab is moved out of a group
   } else if (movedTab.groupId !== -1) {
     logEmit("branch #4")
-    let groupIndex = groupItems.findIndex((g) => g.id === movedTab.groupId)
+    let groupIndex = Utils.findIndex(groupItems, movedTab.groupId)
     movedTab.index = newIndex
     movedTab.groupId = -1
     movedTab.groupTitle = undefined
-    let movedTabIndex = groupItems[groupIndex].tabs.findIndex(
-      (t) => t.id === movedTab.id
-    )
-    const g: TabItem[] = groupItems[groupIndex].tabs.filter(
-      (_, i) => i !== movedTabIndex
-    )
+    let movedTabIndex = Utils.findIndex(groupItems[groupIndex].tabs, movedTab.id)
+    const g: TabItem[] = groupItems[groupIndex].tabs.filter((_, i) => i !== movedTabIndex)
     const newGroups = [...groupItems]
     newGroups[groupIndex].tabs = g
     return getOrdered({
@@ -239,9 +209,7 @@ export function getOrdered({
   removedGroupHeaderPosition?: number
 } {
   const collapsedGroups = newGroups.filter((g) => g.collapsed)
-  const collapsedTabs = collapsedGroups
-    .flatMap((g) => g.tabs)
-    .filter((t) => t.type !== "group")
+  const collapsedTabs = collapsedGroups.flatMap((g) => g.tabs).filter((t) => t.type !== "group")
 
   // update tab indices inside list
   newList.forEach((t) => {
@@ -284,9 +252,7 @@ export function getOrdered({
   for (const group of newGroups) {
     // handle the case when a group has just become empty.
     if (group.tabs.length < 2) {
-      const position = newList.findIndex(
-        (t) => t.type === "group" && t.groupId === group.id
-      )
+      const position = newList.findIndex((t) => t.type === "group" && t.groupId === group.id)
       if (position !== -1) {
         newList.splice(position, 1)
         removedGroupHeaderPosition = position
@@ -317,24 +283,17 @@ export function getOrderedAfterMovedGroup({
   newGroups: GroupItem[]
   removedGroupHeaderPosition?: number
 } {
-  const movedGroupIndex = newGroups.findIndex((g) => g.id === movedTab.groupId)
+  const movedGroupIndex = Utils.findIndex(newGroups, movedTab.groupId)
   const movedCollapsedGroup = newGroups[movedGroupIndex]
   const movedCollapsedTabs = movedCollapsedGroup.tabs
-  const otherCollapsedGroups = newGroups.filter(
-    (g) => g.collapsed && g.id !== movedCollapsedGroup.id
-  )
-  const otherCollapsedTabs = otherCollapsedGroups
-    .flatMap((g) => g.tabs)
-    .filter((t) => t.type !== "group")
+  const otherCollapsedGroups = newGroups.filter((g) => g.collapsed && g.id !== movedCollapsedGroup.id)
+  const otherCollapsedTabs = otherCollapsedGroups.flatMap((g) => g.tabs).filter((t) => t.type !== "group")
   const oldIndex = movedCollapsedGroup.tabs[1].index
 
   /* start indices update */
   if (direction === "dragDown") {
     const updateIndex = (t: TabItem) => {
-      if (
-        t.index >= oldIndex + movedCollapsedTabs.length - 1 &&
-        t.index < newIndex + movedCollapsedTabs.length - 1
-      ) {
+      if (t.index >= oldIndex + movedCollapsedTabs.length - 1 && t.index < newIndex + movedCollapsedTabs.length - 1) {
         t.index -= movedCollapsedTabs.length - 1
       }
     }

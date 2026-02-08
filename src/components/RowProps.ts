@@ -1,13 +1,16 @@
 import { Dispatch, SetStateAction } from "react"
 import { DraggableProvided } from "react-beautiful-dnd"
+
+import { Items } from "../domain/ItemModel"
+import { ProfileItem } from "../domain/profiles/models"
 import { GroupItem } from "../domain/tabs/models"
 import { Context, RowDisplay } from "../utils/constants"
-import { Items } from "../domain/ItemModel"
 
 export interface RowProps<T> {
   index: number
   style?: React.CSSProperties
   data: {
+    currentProfile: ProfileItem | undefined
     searchInputRef: React.RefObject<HTMLInputElement>
     searchTerms: string
     groupItems: GroupItem[]

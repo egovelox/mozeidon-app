@@ -2,9 +2,8 @@ export const GET_BOOKMARKS_COMMAND = "bookmarks -m 100000 -c 200"
 export const GET_HISTORY_COMMAND = "history -m 100000 -c 200"
 export const CREATE_BOOKMARK_COMMAND = "bookmark new"
 export const UPDATE_BOOKMARK_COMMAND = "bookmark update"
-export const GET_TABS_AND_GROUPS_COMMAND =
-  "tabs get --latest-first=false --with-groups"
-export const GET_TABS_COMMAND = "tabs get"
+export const GET_TABS_AND_GROUPS_COMMAND = "tabs get --latest-first=false --with-groups --with-windows"
+export const GET_TABS_COMMAND = "tabs get --with-groups --with-windows"
 export const OPEN_NEW_TAB_COMMAND = "tabs new"
 export const GET_RECENTLY_CLOSED_COMMAND = "tabs get -c"
 export const SWITCH_TAB_COMMAND = "tabs switch"
@@ -15,6 +14,8 @@ export const DELETE_BOOKMARK_COMMAND = "bookmark delete"
 export const DELETE_HISTORY_COMMAND = "history delete"
 export const UPDATE_TABGROUP_COMMAND = "groups update"
 export const NEW_TABGROUP_COMMAND = "tabs init-group"
+export const GET_PROFILES_COMMAND = "profiles get"
+export const UPDATE_PROFILE_COMMAND = "profiles update"
 
 export const FAVICON_PROVIDER_URL = "https://www.google.com/s2/favicons"
 
@@ -64,12 +65,7 @@ const OVIEWPORT_Y_ITEM9 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 8
 const OVIEWPORT_Y_ITEM10 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 9
 const OVIEWPORT_Y_ITEM11 = OVIEWPORT_Y_ITEM1 + ONELINE_ITEM_SIZE * 10
 
-export const M_THRESHOLDS = [
-  MVIEWPORT_Y_ITEM1,
-  MVIEWPORT_Y_ITEM2,
-  MVIEWPORT_Y_ITEM3,
-  MVIEWPORT_Y_ITEM4,
-]
+export const M_THRESHOLDS = [MVIEWPORT_Y_ITEM1, MVIEWPORT_Y_ITEM2, MVIEWPORT_Y_ITEM3, MVIEWPORT_Y_ITEM4]
 export const O_THRESHOLDS = [
   OVIEWPORT_Y_ITEM1,
   OVIEWPORT_Y_ITEM2,

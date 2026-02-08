@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from "react"
+
 import mozeidonLogo from "../assets/trident.svg"
 import { GroupItem } from "../domain/tabs/models"
 import { FILE_PREFIX_URL } from "../utils/constants"
-import { useEffect, useRef, useState } from "react"
 
 interface TextSelectorProps {
   className: string
@@ -29,8 +30,7 @@ export const TextSelector = ({
   /* useEffect in order to conditionnaly render a tooltip */
   useEffect(() => {
     if (spanRef.current) {
-      const hasOverflow =
-        spanRef.current.scrollWidth > spanRef.current.clientWidth
+      const hasOverflow = spanRef.current.scrollWidth > spanRef.current.clientWidth
       setIsOverflowing(hasOverflow)
     }
   }, [])
@@ -60,10 +60,7 @@ export const TextSelector = ({
       {
         // a colored dot to indicate the group
         group && !isGroupHeader ? (
-          <span
-            title={`group: ${group.title}`}
-            className={`tabGroupDot tabGroupColor${group.color}`}
-          ></span>
+          <span title={`group: ${group.title}`} className={`tabGroupDot tabGroupColor${group.color}`}></span>
         ) : null
       }
       <span className="itemLineSpan" ref={spanRef}>
@@ -92,15 +89,15 @@ export const TextSelector = ({
               <>
                 &nbsp; &nbsp;
                 <span
+                  className="groupHeaderCountIndicator"
                   style={{
-                    borderRadius: "8px",
-                    fontSize: ".7em",
-                    padding: ".1em .3em",
+                    borderRadius: "10px",
+                    fontSize: ".8em",
+                    padding: ".1em .2em",
                     border: "1px solid",
-                    color: "gray",
                   }}
                 >
-                  {`${(group?.tabs.length ?? 1) - 1}`}
+                  &nbsp;{`${(group?.tabs.length ?? 1) - 1}`}&nbsp;
                 </span>
                 {!group.collapsed && <span>&nbsp;&nbsp;</span>}
                 {!group.collapsed && (
@@ -114,17 +111,13 @@ export const TextSelector = ({
                     &nbsp;&nbsp;&#x276F;
                   </span>
                 )}
-                {group.collapsed && (
-                  <span style={{ color: "gray" }}>&nbsp;&nbsp;&#x276F;</span>
-                )}
+                {group.collapsed && <span style={{ color: "gray" }}>&nbsp;&nbsp;&#x276F;</span>}
               </>
             )}
           </>
         )}
       </span>
-      {isOverflowing && isRowSelected && (
-        <div className="tooltip">{content}</div>
-      )}
+      {isOverflowing && isRowSelected && <div className="tooltip">{content}</div>}
     </div>
   )
 }

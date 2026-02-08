@@ -1,15 +1,17 @@
 import { forwardRef, useEffect, useState } from "react"
 import { useDebounce } from "use-debounce"
+
 import { Items } from "../domain/ItemModel"
-import { handleSearch, SearchType } from "../utils/searchHandler"
-import { Context, RowDisplay } from "../utils/constants"
-import { logEmit } from "../utils/logEmitter"
+import { ProfileItem } from "../domain/profiles/models"
 import { GroupItem, TabItem } from "../domain/tabs/models"
-import { getLastVisitedTabIndex } from "../utils/getOrderedTabs"
 import { setLastVisitedPosition } from "../hooks/effects/setLastVisitedPosition"
+import { Context, RowDisplay } from "../utils/constants"
+import { getLastVisitedTabIndex } from "../utils/getOrderedTabs"
+import { handleSearch, SearchType } from "../utils/searchHandler"
 
 interface SearchInputProps {
   value: string
+  currentProfile: ProfileItem | undefined
   onChange: React.ChangeEventHandler<HTMLInputElement>
   searchTerms: string
   searchType: SearchType
@@ -28,6 +30,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
   (
     {
       value,
+      currentProfile,
       onChange,
       searchTerms,
       searchType,
@@ -37,7 +40,6 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       fuzzyItems,
       groupItems,
       setFuzzyItems,
-      selectedListIndex,
       setSelectedListIndex,
       setIsSearchNotFound,
     }: SearchInputProps,
@@ -53,24 +55,13 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         if (debouncedSearch !== "") {
           setWasSearched(true)
           setSelectedListIndex(0)
-          searchMatchCount = handleSearch(
-            setFuzzyItems,
-            searchType,
-            searchTerms,
-            context,
-            baseItems,
-            groupItems
-          )
+          searchMatchCount = handleSearch(setFuzzyItems, searchType, searchTerms, context, baseItems, groupItems)
         } else {
           if (context === Context.Tabs) {
-            logEmit(`List component with selected: ${selectedListIndex}`)
             setFuzzyItems(baseItems)
             if (wasSearched) {
               /* reset the selected list index to the last visited tab */
-              const { index } = await getLastVisitedTabIndex(
-                baseItems as TabItem[],
-                groupItems
-              )
+              const { index } = await getLastVisitedTabIndex(currentProfile, baseItems as TabItem[], groupItems)
               setLastVisitedPosition(index, setSelectedListIndex, rowDisplay)
             }
           } else {

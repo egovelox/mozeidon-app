@@ -17,15 +17,29 @@ type Shortcuts = {
   shortcut_close_item: string
   shortcut_list_down: string
   shortcut_list_up: string
+  shortcut_next_tab: string
+  shortcut_previous_tab: string
   shortcut_edit_bookmark: string
 }
 
-export type AppSettings = { web_browser: string } & GlobalShortcuts &
+export type CustomTheme = {
+  main_font: string
+  highlight: string
+  main_background: string
+  secondary_background: string
+  selection_background: string
+  button_border: string
+  icon: string
+}
+
+export type AppSettings = GlobalShortcuts &
   Shortcuts & {
     theme: string
+    custom_theme: CustomTheme | null
     show_favicons: boolean
     date_locale: string
     web_search_engine_urls: string[]
+    custom_browser_manifests: BrowserManifest[]
   }
 
 export type BrowserManifest = {
@@ -45,7 +59,8 @@ export type Settings = {
 }
 
 export const defaultSettings: AppSettings = {
-  web_browser: "firefox",
+  custom_browser_manifests: [],
+  custom_theme: null,
   global_shortcut_show_panel_tabs: "",
   global_shortcut_show_panel_bookmarks: "",
   global_shortcut_show_panel_recently_closed: "",
@@ -58,31 +73,24 @@ export const defaultSettings: AppSettings = {
   shortcut_close_item: "",
   shortcut_list_down: "",
   shortcut_list_up: "",
+  shortcut_next_tab: "",
+  shortcut_previous_tab: "",
   shortcut_edit_bookmark: "",
   theme: "system",
   show_favicons: true,
   date_locale: "en-EN",
-  web_search_engine_urls: [
-    "https://www.google.com/search?q=",
-    "https://addons.mozilla.org/en-US/firefox/search/?q=",
-  ],
+  web_search_engine_urls: ["https://www.google.com/search?q="],
 }
 
 export function getGlobalShortcuts(settings: AppSettings): GlobalShortcuts {
   return {
     global_shortcut_show_panel_tabs: settings.global_shortcut_show_panel_tabs,
-    global_shortcut_show_panel_bookmarks:
-      settings.global_shortcut_show_panel_bookmarks,
-    global_shortcut_show_panel_recently_closed:
-      settings.global_shortcut_show_panel_recently_closed,
-    global_shortcut_show_panel_history:
-      settings.global_shortcut_show_panel_history,
-    global_shortcut_show_panel_settings:
-      settings.global_shortcut_show_panel_settings,
-    global_shortcut_switch_last_visited_tab:
-      settings.global_shortcut_switch_last_visited_tab,
-    global_shortcut_close_current_tab:
-      settings.global_shortcut_close_current_tab,
+    global_shortcut_show_panel_bookmarks: settings.global_shortcut_show_panel_bookmarks,
+    global_shortcut_show_panel_recently_closed: settings.global_shortcut_show_panel_recently_closed,
+    global_shortcut_show_panel_history: settings.global_shortcut_show_panel_history,
+    global_shortcut_show_panel_settings: settings.global_shortcut_show_panel_settings,
+    global_shortcut_switch_last_visited_tab: settings.global_shortcut_switch_last_visited_tab,
+    global_shortcut_close_current_tab: settings.global_shortcut_close_current_tab,
   }
 }
 
@@ -93,6 +101,8 @@ export function getShortcuts(settings: AppSettings): Shortcuts {
     shortcut_close_item: settings.shortcut_close_item,
     shortcut_list_up: settings.shortcut_list_up,
     shortcut_list_down: settings.shortcut_list_down,
+    shortcut_next_tab: settings.shortcut_next_tab,
+    shortcut_previous_tab: settings.shortcut_previous_tab,
     shortcut_edit_bookmark: settings.shortcut_edit_bookmark,
   }
 }

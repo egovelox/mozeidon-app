@@ -1,5 +1,6 @@
 use crate::common::MAIN_WINDOW_LABEL;
 /* import trait Manager */
+#[allow(unused_imports)]
 use tauri::{AppHandle, Manager};
 #[cfg(target_os = "macos")]
 use tauri_nspanel::ManagerExt;

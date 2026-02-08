@@ -12,6 +12,7 @@
   -webkit-text-size-adjust: 100%;
 
   --main-font-color: #2e2e2e;
+  --main-icon-color: #2e2e2e;
   --main-background-color: #EDEFF1;
   --selected-background-color: #D9D1C9;
   --selected-input-background-color: #FAFAFA;
@@ -19,8 +20,6 @@
   --app-border-color: rgba(28, 27, 26, 0.2);
   --loading-glow-color: #000000;
   --light-orange: #ed7647;
-  --scrollbar-orange: #d9744e;
-  --button-focus-filter: brightness(90%) contrast(80%);
   --button-box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
   --row-button-focus-background-color: #ed7647;
   --highlight-box-shadow: 0px 0px 2px var(--light-orange), 0px 0px 4px var(--light-orange);
@@ -49,18 +48,23 @@
   /* optional: the light is all what is declared above override if needed */
 }
 
+/* Disable macOS smart quotes in json-edit-react inputs */
+[class*="jer-"] input,
+[class*="jer-"] textarea {
+  -webkit-locale: "en-US";
+  quotes: none;
+}
+
 :root[data-theme="dark"] {
   --main-font-color: #b0b0b0;
-  /*--main-font-color: #8d948e;*/
+  --main-icon-color: #b0b0b0;
   --button-border-color: #3a3a3a;
   --main-background-color: #252525;
   --selected-input-background-color: #212121;
   --selected-background-color: #3b3b3b;
   --loading-glow-color: #a6a6a6;
-  --button-focus-filter: brightness(120%) contrast(80%);
   --app-border-color: rgba(255, 255, 255, 0.15);
   --selected-actions-view-row: #1f1f1f;
-  --scrollbar-orange: #82452e;
   --tab-group-color-blue: #2152c4;
   --tab-group-color-cyan: #32758f;
   --tab-group-color-purple: #7b2ea1;
@@ -85,14 +89,13 @@
   /* will apply only if the user settings have a theme: system */
   :root:not([data-theme]) {
     --main-font-color: #b0b0b0;
+    --main-icon-color: #b0b0b0;
     --button-border-color: #3a3a3a;
     --main-background-color: #252525;
     --selected-background-color: #3b3b3b;
     --selected-input-background-color: #212121;
     --loading-glow-color: #a6a6a6;
-    --button-focus-filter: brightness(120%) contrast(80%);
     --app-border-color: rgba(255, 255, 255, 0.15);
-    --scrollbar-orange: #82452e;
     --selected-actions-view-row: #1f1f1f;
     --tab-group-color-blue: #2152c4;
     --tab-group-color-cyan: #32758f;
@@ -208,8 +211,7 @@ input, button {
   color: var(--light-orange);
 }
 .svgIcon {
-  /* filter trick to approximate #2e2e2e */
-  filter: invert(61%) sepia(0%) saturate(0%) hue-rotate(170deg) brightness(91%) contrast(85%);
+  color: var(--main-icon-color);
   width: 1em;
   height: 1em;
   vertical-align: middle;
@@ -254,7 +256,7 @@ input, button {
     background-color: var(--main-background-color);
   }
   &::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-orange);
+    background-color: var(--light-orange);
     border-radius: 30px;
   }
 }
@@ -422,6 +424,7 @@ input, button {
 }
 /* ----------- PanelsLauncher ----------------- */
 .panelLauncherContainer {
+  margin-top: 3em;
   display: flex;
   flex-direction: column;
 }
@@ -447,16 +450,24 @@ input, button {
 }
 
 /* ----------- UserNotification ----------------- */
+
+#userNotificationContainer {
+  margin-left: 1em;
+  margin-right: 1em;
+  padding: .2em;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  color: var(--light-orange);
+}
 .userNotification {
   opacity: 0;
-  transition: opacity 1.5s ease-in-out, border 1.5s ease-in-out, box-shadow 1.5s ease-in-out;
+  transition: opacity 1.5s ease-in-out;
   font-size: 0.8em !important;
   font-style: italic;
 }
 
 .userNotification.visible {
-  border: 1px solid transparent;
-  box-shadow: var(--highlight-box-shadow);
   opacity: 1;
 }
 
@@ -496,7 +507,8 @@ input, button {
 }
 .settingsContent {
   flex: 1;
-  padding: 1rem;
+  padding-left: 1em;
+  padding-right: 1em;
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -527,7 +539,40 @@ input, button {
   cursor: default;
   color: var(--light-orange);
   font-size: 0.8em;
+  cursor: pointer;
 }
+
+/* ----------- ThemeEditor ----------------- */
+
+.colorEditorButton {
+  height: 1em;
+}
+
+.colorEditorRow {
+  padding: 2px 2px;
+  display: flex;
+  flex-direction: row;
+  gap: .8em;
+  align-items: center;
+  font-size: .8em;
+}
+
+.colorEditorRowLabel {
+  padding: .3em;
+  background: var(--selected-background-color);
+  border-radius: 8px;
+}
+
+.colorPicker {
+  background: var(--selected-input-background-color);
+  border-radius: 8px;
+  padding: 0;
+}
+
+.colorPickerTitle {
+  padding: .4em 0;
+}
+
 
 /* ----------- containers ----------------- */
 .container {
@@ -535,6 +580,14 @@ input, button {
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.errorContainer {
+  margin: 0;
+  display: flex;
+  height: 88vh;
+  flex-direction: column;
+  overflow: scroll;
 }
 
 .actionContainer {
@@ -551,6 +604,10 @@ input, button {
 
 .row {
   display: flex;
+}
+
+.groupHeaderCountIndicator {
+  color: var(--button-border-color);
 }
 
 /* ----------- Search Bar ----------------- */
@@ -600,6 +657,107 @@ textarea {
   display: flex;
   margin-bottom: 1em;
 }
+
+/* ----------- Editors - ProfileSelector ----------------- */
+#profileSelector {
+  width: 200px;
+  font-size: 0.9em;
+  margin-right: 1em;
+}
+.profileSelectorLabel1 {
+  color: var(--main-font-color);
+  font-size: 0.9em;
+}
+.profileSelectorLabel2 {
+  color: var(--light-orange);
+  font-size: 0.8em; /* smaller */
+}
+.profileSelector__group-heading {
+  color: var(--light-orange) !important;
+  font-size: 1em !important;
+  text-transform: none !important;
+}
+.profileSelector__indicator-separator {
+  opacity: 0;
+}
+.profileSelector__control {
+  background-color: var(--main-background-color) !important;
+  border: 1px solid var(--button-border-color) !important;
+  border-radius: 8px !important;
+}
+.profileSelector__control:hover {
+  box-shadow: var(--highlight-box-shadow) !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+}
+.profileSelector__control--is-focused {
+  box-shadow: var(--highlight-box-shadow) !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+}
+.profileSelector__control--is-hovered {
+  box-shadow: var(--highlight-box-shadow) !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+}
+.profileSelector__value-container {
+  justify-content: center !important;
+}
+.profileSelector__single-value {
+  text-align: center !important;
+}
+.profileSelector__menu-list {
+  background-color: var(--main-background-color);
+  border: 1px solid transparent !important;
+  color: var(--main-font-color) !important;
+  padding: 0 !important;
+}
+.profileSelector__menu {
+  font-weight: var(--enlarged-font-weight);
+  font-size: 0.8em; /* smaller */
+  padding: 3px;
+  background-color: var(--main-background-color)!important;
+}
+.profileSelector__option {
+  background-color: var(--main-background-color) !important;
+  color: var(--main-font-color) !important;
+}
+.profileSelector__option--is-disabled {
+  background-color: var(--main-background-color) !important;
+  color: var(--light-orange) !important;
+}
+.profileSelector__option--is-focused {
+  background-color: var(--selected-background-color) !important;
+  border-radius: 5px !important;
+}
+.profileSelector__option--is-disabled.profileSelector__option--is-focused {
+  background-color: var(--main-background-color) !important;
+  color: var(--light-orange) !important;
+}
+.profileSelector__tip {
+  background-color: var(--main-background-color) !important;
+  font-size: .8em !important;
+  color: var(--light-orange) !important;
+  padding: .5em;
+  padding-top: 0;
+}
+/* ----------- Profiles ----------------- */
+
+.profileRowContainer {
+  display: flex;
+  align-items: center;
+  gap: 2em;
+}
+.profileRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+  margin-left: .1em;
+}
+.noProfileValue {
+  color: var(--light-orange);
+}
+/* ----------- Editors - bookmarkFolderSelect ----------------- */
 
 .bookmarkFolderSelect {
   font-size: .9em;
@@ -711,7 +869,7 @@ textarea {
 /* ----------- VerticalActionsView ----------------- */
 .verticalActionsViewContainer {
   position: absolute;
-  bottom: 1.3em;
+  bottom: 1.9em;
   right: .6em;
   min-width: 15px;
   min-height: 390px;

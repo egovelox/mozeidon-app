@@ -1,5 +1,6 @@
 import { Group, GroupItem, TabItem } from "../domain/tabs/models"
 import { logEmit } from "./logEmitter"
+import { Utils } from "./utils"
 
 export type DragDirection = "dragDown" | "dragUp"
 export type DragAndDropStructure = {
@@ -67,9 +68,7 @@ export function getDragAndDropStructure({
     }
     // handle the case when the destination row is a group title
   } else {
-    const groupIndex = groups.findIndex(
-      (g) => g.id === list[droppedToPosition].groupId
-    )
+    const groupIndex = Utils.findIndex(groups, list[droppedToPosition].groupId)
     const group = groups[groupIndex]
     if (droppedToPosition === list.length - 1) {
       // TODO edge case
@@ -97,9 +96,7 @@ export function getDragAndDropStructure({
             position: maybePosition,
           }
         } else {
-          const hiddenItem = groups
-            .flatMap((g) => g.tabs)
-            .find((tab) => tab.index === index)
+          const hiddenItem = groups.flatMap((g) => g.tabs).find((tab) => tab.index === index)
           dragAndDropStructure.takesIndexFrom = {
             item: hiddenItem!,
             index,
@@ -125,8 +122,7 @@ export function getDragAndDropStructure({
     // the takesIndexFrom item may be in a collapsed group, so may be missing in the tabsList
     (takesIndexFrom.position === -1 &&
       list[droppedOn.position + 1] &&
-      (list[droppedOn.position + 1].type === "group" ||
-        list[droppedOn.position + 1].groupId === -1)) ||
+      (list[droppedOn.position + 1].type === "group" || list[droppedOn.position + 1].groupId === -1)) ||
     // case : you drag up and ungrouped tab is just under the dropped position
     (direction === "dragUp" && takesIndexFrom.item.groupId === -1) ||
     // case : TODO
@@ -139,37 +135,27 @@ export function getDragAndDropStructure({
       list[draggedFromPosition].groupId !== droppedOn.item.groupId &&
       droppedOn.item.type === "tab" &&
       droppedOn.item.groupId !== -1 &&
-      (!list[droppedOn.position + 1] ||
-        list[droppedOn.position + 1].groupId === -1)) ||
+      (!list[droppedOn.position + 1] || list[droppedOn.position + 1].groupId === -1)) ||
     // case : you drag down and a group is just above the dropped position
     (direction === "dragDown" &&
       droppedOn.item.type === "group" &&
       takesIndexFrom.item.groupId !== -1 &&
       // but check the group is collapsed
-      (!list[droppedOn.position + 1] ||
-        list[droppedOn.position + 1].groupId === -1))
+      (!list[droppedOn.position + 1] || list[droppedOn.position + 1].groupId === -1))
   ) {
-    logEmit(
-      `"getDragTabDescription: takesIndex ${takesIndexFrom.index} shouldBeUngrouped ${true}`
-    )
+    logEmit(`"getDragTabDescription: takesIndex ${takesIndexFrom.index} shouldBeUngrouped ${true}`)
     dragAndDropStructure.dragged.shouldBeUngrouped = true
     return { dragAndDropStructure }
   }
-  logEmit(
-    `"getDragTabDescription: takesIndex ${takesIndexFrom.index} shouldBeUngrouped ${false}`
-  )
+  logEmit(`"getDragTabDescription: takesIndex ${takesIndexFrom.index} shouldBeUngrouped ${false}`)
   dragAndDropStructure.dragged.shouldBeUngrouped = false
   return { dragAndDropStructure }
 }
 
-export function insertTabGroups(
-  tabs: TabItem[],
-  receivedGroups: Group[],
-  groupItems: GroupItem[]
-) {
+export function insertTabGroups(tabs: TabItem[], receivedGroups: Group[], groupItems: GroupItem[]) {
   receivedGroups.forEach((group) => {
     const groupFirstTabIndex = tabs.findIndex((t) => t.groupId === group.id)
-    const groupItemIndex = groupItems.findIndex((g) => g.id === group.id)
+    const groupItemIndex = Utils.findIndex(groupItems, group.id)
     const groupItem = groupItems[groupItemIndex]
     tabs.splice(groupFirstTabIndex, 0, {
       ...tabs[groupFirstTabIndex],

@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react"
-import { Notification } from "../hooks/useUserNotification"
 
-export const UserNotification = ({
-  userNotification,
-}: {
-  userNotification: Notification | null
-}) => {
+import { Notification } from "../hooks/useUserNotification"
+import { Utils } from "../utils/utils"
+
+export const UserNotification = ({ userNotification }: { userNotification: Notification | null }) => {
   const [isNotificationVisible, setIsNotificationVisible] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -27,12 +25,9 @@ export const UserNotification = ({
 
   return (
     userNotification && (
-      <button
-        className={`actionButton userNotification ${isNotificationVisible ? "visible" : ""}`}
-        disabled
-      >
-        {userNotification.message}
-      </button>
+      <div id="userNotificationContainer" onClick={() => Utils.focusSearchInput()}>
+        <span className={`userNotification ${isNotificationVisible ? "visible" : ""}`}>{userNotification.message}</span>
+      </div>
     )
   )
 }

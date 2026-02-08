@@ -1,5 +1,6 @@
-import { RowDisplay } from "../../utils/constants"
 import { FixedSizeList as List } from "react-window"
+
+import { RowDisplay } from "../../utils/constants"
 
 export const setLastVisitedPosition = (
   i: number,

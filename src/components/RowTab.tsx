@@ -1,25 +1,17 @@
 import { useEffect, useRef, useState } from "react"
-import { TabItem } from "../domain/tabs/models"
-import { FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
-import { TextSelector } from "./TextSelector"
-import {
-  clearFaviconCache,
-  getFavicon,
-  setFavicon,
-} from "../utils/faviconCache"
-import { useSettings } from "../hooks/useSettings"
-import { switchTabAction } from "../actions/actions"
-import { invoke } from "@tauri-apps/api/core"
-import { RowProps } from "./RowProps"
-import { toggleCollapseGroup } from "../actions/tabs"
 
-export const TabRow = ({
-  index,
-  style,
-  data,
-  provided,
-  isDragging,
-}: RowProps<TabItem>) => {
+import { switchTabAction } from "../actions/actions"
+import { toggleCollapseGroup } from "../actions/tabs"
+import { TabItem } from "../domain/tabs/models"
+import { useSettings } from "../hooks/useSettings"
+import { FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
+import { clearFaviconCache, getFavicon, setFavicon } from "../utils/faviconCache"
+import { SwellUi } from "../utils/ui"
+import { Utils } from "../utils/utils"
+import { RowProps } from "./RowProps"
+import { TextSelector } from "./TextSelector"
+
+export const TabRow = ({ index, style, data, provided, isDragging }: RowProps<TabItem>) => {
   /* Adding style attribute is very important here
     it supplies the row height to the elements. */
   const {
@@ -29,9 +21,7 @@ export const TabRow = ({
   const isGroupHeader = item.type === "group"
   const group = data.groupItems.find((g) => item.groupId === g.id)
   const domain = item.domain
-  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() =>
-    getFavicon(domain)
-  )
+  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() => getFavicon(domain))
   const rowDisplay = data.rowDisplay
   const isRowSelected = data.selected === index
   const selectionClassName = (isRowSelected && "sliBox") || "liBox"
@@ -50,9 +40,7 @@ export const TabRow = ({
   }, [domain])
 
   const title = data.items.map(({ title }) => title)[index]
-  const shortDomain = data.items
-    .map(({ domain }) => domain)
-    [index].replace("www.", "")
+  const shortDomain = data.items.map(({ domain }) => domain)[index].replace("www.", "")
   const url = data.items.map(({ url }) => url)[index]
 
   /*
@@ -85,6 +73,7 @@ export const TabRow = ({
 
   const handleToggleCollapseGroup = async () => {
     const { newList, newGroups } = await toggleCollapseGroup({
+      profile: data.currentProfile,
       listIndex: index,
       groupId: item.groupId,
       list: data.items,
@@ -93,7 +82,7 @@ export const TabRow = ({
     data.setItems(newList)
     data.setBaseItems(newList)
     data.setGroupItems(newGroups)
-    document.getElementById("searchInput")?.focus()
+    Utils.focusSearchInput()
   }
 
   const handleGroupClick = async (e: React.MouseEvent) => {
@@ -109,9 +98,9 @@ export const TabRow = ({
       clearTimeout(clickTimeout.current)
       clickTimeout.current = null
     }
-    await switchTabAction(`${item.windowId}:${item.id}`, settings.web_browser)
+    await switchTabAction(data.currentProfile, `${item.windowId}:${item.id}`)
     data.restoreDefaults()
-    await invoke("hide")
+    await SwellUi.hide()
   }
   useEffect(() => {
     return () => {
@@ -147,16 +136,8 @@ export const TabRow = ({
             isRowSelected={isRowSelected}
             pinned={item.pinned}
           />
-          <TextSelector
-            className="liLineSmallFont"
-            content={url}
-            isRowSelected={isRowSelected}
-          />
-          <TextSelector
-            className="liLine"
-            content={shortDomain || "local tab"}
-            isRowSelected={isRowSelected}
-          />
+          <TextSelector className="liLineSmallFont" content={url} isRowSelected={isRowSelected} />
+          <TextSelector className="liLine" content={shortDomain || "local tab"} isRowSelected={isRowSelected} />
         </div>
       ) : (
         <div
@@ -188,10 +169,7 @@ export const TabRow = ({
       className={``}
     >
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div
-          className={`${selectionClassName} ${isDragging ? "isDragging" : ""}`}
-          style={{ cursor: "default" }}
-        >
+        <div className={`${selectionClassName} ${isDragging ? "isDragging" : ""}`} style={{ cursor: "default" }}>
           <TextSelector
             group={group}
             isGroupHeader
@@ -200,12 +178,7 @@ export const TabRow = ({
             isRowSelected={isRowSelected}
             pinned={item.pinned}
           />
-          <TextSelector
-            isGroupHeader
-            className="liLineSmallFont"
-            content={"Tab group"}
-            isRowSelected={isRowSelected}
-          />
+          <TextSelector isGroupHeader className="liLineSmallFont" content={"Tab group"} isRowSelected={isRowSelected} />
           <TextSelector
             isGroupHeader
             className="liLine"
@@ -214,10 +187,7 @@ export const TabRow = ({
           />
         </div>
       ) : (
-        <div
-          className={`${selectionClassName} ${isDragging ? "isDragging" : ""}`}
-          style={{ cursor: "default" }}
-        >
+        <div className={`${selectionClassName} ${isDragging ? "isDragging" : ""}`} style={{ cursor: "default" }}>
           <TextSelector
             group={group}
             isGroupHeader

@@ -14,11 +14,7 @@ export type ValidationError = {
   received: string
 }
 
-const BookmarkUrl = v.pipe(
-  v.string(),
-  v.nonEmpty("Please enter your url."),
-  v.url("The url is badly formatted.")
-)
+const BookmarkUrl = v.pipe(v.string(), v.nonEmpty("Please enter your url."), v.url("The url is badly formatted."))
 const FolderPathUrl = v.pipe(
   v.string(),
   v.startsWith("/", "A folder-path not starting with `/` is not allowed"),
@@ -33,9 +29,7 @@ export const BookmarkFormSchema = v.object({
 
 export function isValidBookmark(
   newData: unknown,
-  setValidationErrors: React.Dispatch<
-    React.SetStateAction<ValidationError[] | null>
-  >
+  setValidationErrors: React.Dispatch<React.SetStateAction<ValidationError[] | null>>
 ) {
   const result = v.safeParse(BookmarkFormSchema, newData)
   if (!result.success) {

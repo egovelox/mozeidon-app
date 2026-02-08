@@ -3,8 +3,8 @@ use std::{fs, path::PathBuf};
 use tauri::AppHandle;
 
 use crate::common::{
-    get_base_user_dir, write_manifest_file, write_manifests_for_all_browsers, Browser,
-    ManifestWriteResult, MANIFEST_FILENAME, OS,
+    delete_custom_manifest_file, write_custom_manifest_file, write_manifest_file,
+    write_manifests_for_all_browsers, Browser, BrowserFamily, ManifestWriteResult, OS,
 };
 
 #[tauri::command]
@@ -28,31 +28,24 @@ pub async fn write_all_manifests(app: AppHandle) -> Result<Vec<ManifestWriteResu
 
 #[tauri::command]
 pub async fn write_custom_manifest(
-    relative_dir: String,
-    content: String,
-    browser_str: &str,
+    app: AppHandle,
+    native_manifest_dir: String,
+    browser_family: String,
 ) -> Result<ManifestWriteResult, String> {
-    let browser = Browser::try_from_str(browser_str).ok_or("Invalid browser string")?;
+    let browser = BrowserFamily::try_from_str(browser_family).ok_or("Invalid browser string")?;
+    println!(" received path {}", &native_manifest_dir);
+    let res = write_custom_manifest_file(&app, native_manifest_dir, browser)
+        .map_err(|e| format!("Failed to create manifest: {}", e));
+    res
+}
 
-    let base_dir = get_base_user_dir(OS::current().ok_or("Unsupported platform")?, &browser)
-        .ok_or("Failed to get base user directory")?;
-
-    let full_path = base_dir.join(&relative_dir);
-
-    if !full_path.exists() || !full_path.is_dir() {
-        return Err(format!("Directory does not exist: {}", full_path.display()));
-    }
-
-    let dest_path = full_path.join(MANIFEST_FILENAME);
-
-    std::fs::write(&dest_path, &content).map_err(|e| format!("Failed to write file: {}", e))?;
-
-    Ok(ManifestWriteResult {
-        browser,
-        written: true,
-        path: Some(dest_path.to_string_lossy().into_owned()),
-        content: Some(content),
-    })
+#[tauri::command]
+pub async fn delete_custom_manifest(
+    app: AppHandle,
+    native_manifest_path: String,
+) -> Result<(), String> {
+    delete_custom_manifest_file(&app, native_manifest_path)
+        .map_err(|e| format!("Failed to delete manifest: {}", e))
 }
 
 #[derive(Debug, Deserialize)]

@@ -1,9 +1,10 @@
 import fuzzysort from "fuzzysort"
-import { HistoryItem } from "../domain/history/models"
+
+import { Items } from "../domain/ItemModel"
 import { BookmarkItem } from "../domain/bookmarks/models"
+import { HistoryItem } from "../domain/history/models"
 import { GroupItem, TabItem } from "../domain/tabs/models"
 import { Context } from "./constants"
-import { Items } from "../domain/ItemModel"
 
 /* TODO Try to improve typing */
 type Item = Items[keyof Items]
@@ -30,14 +31,7 @@ export function handleSearch(
     searchTerms.trim(),
     context === Context.Tabs
       ? (
-          [
-            ...new Set([
-              ...items,
-              ...groupItems.flatMap((g) =>
-                g.tabs.filter((t) => t.type === "tab")
-              ),
-            ]),
-          ] as TabItem[]
+          [...new Set([...items, ...groupItems.flatMap((g) => g.tabs.filter((t) => t.type === "tab"))])] as TabItem[]
         ).toSorted((t1, t2) => t1.index - t2.index)
       : items,
     getKeys(context)
@@ -58,20 +52,13 @@ function getSearchResults<T extends Item>(
 ) {
   switch (searchType) {
     case SearchType.Fuzzy:
-      return fuzzysort
-        .go(searchTerms, items, { keys: itemKeys, threshold: 0 })
-        .map((i) => i.obj)
+      return fuzzysort.go(searchTerms, items, { keys: itemKeys, threshold: 0 }).map((i) => i.obj)
     case SearchType.Exact:
       return items.filter((item) => {
         let exactMatch = false
         for (const k of itemKeys) {
           /* TODO improve typing */
-          if (
-            item[k as keyof T] &&
-            (item[k as keyof T] as string)
-              .toLowerCase()
-              .includes(searchTerms.toLowerCase())
-          ) {
+          if (item[k as keyof T] && (item[k as keyof T] as string).toLowerCase().includes(searchTerms.toLowerCase())) {
             exactMatch = true
             break
           }

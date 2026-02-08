@@ -1,12 +1,8 @@
 import React from "react"
 import { FixedSizeList as List } from "react-window"
+
 import { useSettings } from "../hooks/useSettings"
-import {
-  RowDisplay,
-  LIST_CONTAINER_HEIGHT,
-  MULTILINE_ITEM_SIZE,
-  ONELINE_ITEM_SIZE,
-} from "../utils/constants"
+import { RowDisplay, LIST_CONTAINER_HEIGHT, MULTILINE_ITEM_SIZE, ONELINE_ITEM_SIZE } from "../utils/constants"
 import { WebSearchRow } from "./WebSearchRow"
 
 type WebSearchListContainerProps = {
@@ -37,11 +33,7 @@ export const WebSearchListContainer = ({
       height={LIST_CONTAINER_HEIGHT}
       overscanCount={20}
       itemCount={web_search_engine_urls.length}
-      itemSize={
-        rowDisplay === RowDisplay.MultiLine
-          ? MULTILINE_ITEM_SIZE
-          : ONELINE_ITEM_SIZE
-      }
+      itemSize={rowDisplay === RowDisplay.MultiLine ? MULTILINE_ITEM_SIZE : ONELINE_ITEM_SIZE}
       width={"100%"}
       itemData={{
         rowDisplay,

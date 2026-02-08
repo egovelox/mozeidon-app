@@ -1,55 +1,68 @@
 import { invoke } from "@tauri-apps/api/core"
-import { GroupItem, TabItem } from "../domain/tabs/models"
-import { runWithChrono } from "../utils/time"
-import { closeTabAction, updateTabGroupAction } from "./actions"
-import {
-  Context,
-  GET_RECENTLY_CLOSED_COMMAND,
-  GET_TABS_COMMAND,
-  GET_TABS_AND_GROUPS_COMMAND,
-} from "../utils/constants"
 
-export const fetchTabsWithGroups = async () => {
+import { ProfileItem } from "../domain/profiles/models"
+import { GroupItem, TabItem } from "../domain/tabs/models"
+import { Context, GET_RECENTLY_CLOSED_COMMAND, GET_TABS_COMMAND, GET_TABS_AND_GROUPS_COMMAND } from "../utils/constants"
+import { runWithChrono } from "../utils/time"
+import { Utils } from "../utils/utils"
+import { closeTabAction, updateTabGroupAction } from "./actions"
+import { getProfileIdArg } from "./profiles"
+
+export const fetchTabsWithGroups = async (profile?: ProfileItem) => {
   return await runWithChrono(() =>
     invoke("mozeidon", {
       context: "tabsWithGroups",
-      args: GET_TABS_AND_GROUPS_COMMAND,
+      args: GET_TABS_AND_GROUPS_COMMAND + getProfileIdArg(profile),
     })
   )
 }
 
-export const fetchTabs = async () => {
+export const fetchTabs = async (profile: ProfileItem | undefined) => {
   return await runWithChrono(() =>
-    invoke("mozeidon", { context: Context.Tabs, args: GET_TABS_COMMAND })
+    invoke("mozeidon", {
+      context: "tabsWithGroups",
+      args: GET_TABS_AND_GROUPS_COMMAND + getProfileIdArg(profile),
+    })
+  )
+}
+export const fetchTabsLatestFirst = async (profile: ProfileItem | undefined) => {
+  return await runWithChrono(() =>
+    invoke("mozeidon", {
+      context: "tabsWithGroups",
+      args: GET_TABS_COMMAND + getProfileIdArg(profile),
+    })
   )
 }
 
-export const fetchRecentlyClosedTabs = async () => {
+export const fetchRecentlyClosedTabs = async (profile: ProfileItem | undefined) => {
   return await runWithChrono(() =>
     invoke("mozeidon", {
       context: Context.Tabs,
-      args: GET_RECENTLY_CLOSED_COMMAND,
+      args: GET_RECENTLY_CLOSED_COMMAND + getProfileIdArg(profile),
     })
   )
 }
 
 export const toggleCollapseGroup = async ({
+  profile,
   listIndex,
   groupId,
   groups,
   list,
 }: {
+  profile: ProfileItem | undefined
   listIndex: number
   groupId: number
   groups: GroupItem[]
   list: TabItem[]
 }) => {
-  const groupIndex = groups.findIndex((g) => g.id === groupId)
+  const groupIndex = Utils.findIndex(groups, groupId)
+
   const group = groups[groupIndex]
   const listCopy = [...list]
   const groupsCopy = [...groups]
   if (!group.collapsed) {
-    await updateTabGroupAction(group.id, { collapsed: true })
+    await updateTabGroupAction(profile, group.id, { collapsed: true })
     groupsCopy.splice(groupIndex, 1, { ...group, collapsed: true })
     listCopy.splice(listIndex + 1, group.tabs.length - 1)
     return {
@@ -57,13 +70,9 @@ export const toggleCollapseGroup = async ({
       newGroups: groupsCopy,
     }
   } else {
-    await updateTabGroupAction(group.id, { collapsed: false })
+    await updateTabGroupAction(profile, group.id, { collapsed: false })
     groupsCopy.splice(groupIndex, 1, { ...group, collapsed: false })
-    const newList = [
-      ...listCopy.slice(0, listIndex),
-      ...group.tabs,
-      ...listCopy.slice(listIndex + 1),
-    ]
+    const newList = [...listCopy.slice(0, listIndex), ...group.tabs, ...listCopy.slice(listIndex + 1)]
     return {
       newList,
       newGroups: groupsCopy,
@@ -72,15 +81,17 @@ export const toggleCollapseGroup = async ({
 }
 
 export const closeTab = async ({
+  profile,
   items,
   selectedListIndex,
 }: {
+  profile: ProfileItem | undefined
   items: TabItem[]
   selectedListIndex: number
 }) => {
   const item = items[selectedListIndex] as TabItem
   const actionId = `${item.windowId}:${item.id}`
-  await closeTabAction(actionId)
+  await closeTabAction(profile, actionId)
 }
 
 export function handleAfterCloseTab({
@@ -113,17 +124,11 @@ export function handleAfterCloseTab({
   })
 }
 
-export function removeTabFromGroup({
-  item,
-  groups,
-}: {
-  item: TabItem
-  groups: GroupItem[]
-}): GroupItem[] {
+export function removeTabFromGroup({ item, groups }: { item: TabItem; groups: GroupItem[] }): GroupItem[] {
   if (item.groupId === -1) {
     return groups
   }
-  const groupIndex = groups.findIndex((g) => g.id === item.groupId)
+  const groupIndex = Utils.findIndex(groups, item.groupId)
   if (groupIndex === -1) {
     return groups
   }
@@ -172,9 +177,7 @@ export function reorderAfterClosedTab({
   if (deleteGroupId !== -1) {
     return {
       newBaseItems: newBaseItems.filter((tab) => tab.groupId !== deleteGroupId),
-      newFuzzyItems: newFuzzyItems.filter(
-        (tab) => tab.groupId !== deleteGroupId
-      ),
+      newFuzzyItems: newFuzzyItems.filter((tab) => tab.groupId !== deleteGroupId),
       newGroups: newGroups.filter(({ id }) => id !== deleteGroupId),
     }
   }

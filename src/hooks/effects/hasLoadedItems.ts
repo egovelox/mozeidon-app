@@ -1,13 +1,17 @@
-import { FixedSizeList as List } from "react-window"
-import { Context, RowDisplay } from "../../utils/constants"
 import { useEffect } from "react"
-import { getLastVisitedTabIndex } from "../../utils/getOrderedTabs"
-import { GroupItem, TabItem } from "../../domain/tabs/models"
-import { setLastVisitedPosition } from "./setLastVisitedPosition"
+import { FixedSizeList as List } from "react-window"
+
 import { Items } from "../../domain/ItemModel"
+import { ProfileItem } from "../../domain/profiles/models"
+import { GroupItem, TabItem, Window } from "../../domain/tabs/models"
+import { Context, RowDisplay } from "../../utils/constants"
+import { getLastVisitedTabIndex } from "../../utils/getOrderedTabs"
+import { setLastVisitedPosition } from "./setLastVisitedPosition"
 
 export const didLoadItemsEffect = (
   listRef: React.RefObject<List<any>>,
+  currentProfile: ProfileItem | undefined,
+  currentWindow: Window | undefined,
   list: TabItem[],
   groups: GroupItem[],
   context: Context,
@@ -16,13 +20,15 @@ export const didLoadItemsEffect = (
   setBaseItems: React.Dispatch<React.SetStateAction<Items>>,
   setGroupItems: React.Dispatch<React.SetStateAction<GroupItem[]>>,
   rowDisplay: RowDisplay,
-  { isLoading }: { isLoading: boolean }
+  isLoading: boolean
 ) => {
   return useEffect(() => {
-    if (isLoading || context !== Context.Tabs) return
-    if (!listRef.current) return
+    if (isLoading || context !== Context.Tabs) {
+      return
+    }
+    if (!listRef.current || !currentWindow) return
     const setPositionOnLastAccessedTab = async () => {
-      const { index, changes } = await getLastVisitedTabIndex(list, groups)
+      const { index, changes } = await getLastVisitedTabIndex(currentProfile, list, groups)
       if (!changes) {
         setLastVisitedPosition(index, setSelectedListIndex, rowDisplay, listRef)
       } else {

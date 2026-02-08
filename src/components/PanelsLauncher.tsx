@@ -38,15 +38,13 @@ export const PanelsLauncher = ({
         shortCut = appSettings.global_shortcut_show_panel_tabs || noShortCut
         break
       case PanelLauncher.BOOKMARKS:
-        shortCut =
-          appSettings.global_shortcut_show_panel_bookmarks || noShortCut
+        shortCut = appSettings.global_shortcut_show_panel_bookmarks || noShortCut
         break
       case PanelLauncher.HISTORY:
         shortCut = appSettings.global_shortcut_show_panel_history || noShortCut
         break
       case PanelLauncher.RECENTLY_CLOSED_TABS:
-        shortCut =
-          appSettings.global_shortcut_show_panel_recently_closed || noShortCut
+        shortCut = appSettings.global_shortcut_show_panel_recently_closed || noShortCut
         break
       case PanelLauncher.SETTINGS:
         shortCut = appSettings.global_shortcut_show_panel_settings || noShortCut
@@ -58,10 +56,7 @@ export const PanelsLauncher = ({
   return (
     <div className="panelLauncherContainer">
       <div className="panelLauncher">
-        <button
-          className="actionButton panelLauncherButton"
-          onClick={() => tabsHandler(settings)}
-        >
+        <button className="actionButton panelLauncherButton" onClick={() => tabsHandler(settings)}>
           Tabs
         </button>
         <div className="panelLauncherDescription">
@@ -76,10 +71,7 @@ export const PanelsLauncher = ({
         </div>
       </div>
       <div className="panelLauncher">
-        <button
-          className="actionButton panelLauncherButton"
-          onClick={recentlyClosedTabsHandler}
-        >
+        <button className="actionButton panelLauncherButton" onClick={recentlyClosedTabsHandler}>
           Recently closed tabs
         </button>
         <div className="panelLauncherDescription">
@@ -94,10 +86,7 @@ export const PanelsLauncher = ({
         </div>
       </div>
       <div className="panelLauncher">
-        <button
-          className="actionButton panelLauncherButton"
-          onClick={bookmarksHandler}
-        >
+        <button className="actionButton panelLauncherButton" onClick={bookmarksHandler}>
           Bookmarks
         </button>
         <div className="panelLauncherDescription">
@@ -112,10 +101,7 @@ export const PanelsLauncher = ({
         </div>
       </div>
       <div className="panelLauncher">
-        <button
-          className="actionButton panelLauncherButton"
-          onClick={historyHandler}
-        >
+        <button className="actionButton panelLauncherButton" onClick={historyHandler}>
           History
         </button>
         <div className="panelLauncherDescription">
@@ -130,10 +116,7 @@ export const PanelsLauncher = ({
         </div>
       </div>
       <div className="panelLauncher">
-        <button
-          className="actionButton panelLauncherButton"
-          onClick={settingsHandler}
-        >
+        <button className="actionButton panelLauncherButton" onClick={settingsHandler}>
           Settings
         </button>
         <div className="panelLauncherDescription">

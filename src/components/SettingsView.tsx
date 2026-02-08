@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react"
-import { useSettings } from "../hooks/useSettings"
+
 import mozeidonLogo from "../assets/trident.svg"
+import { ProfileItem } from "../domain/profiles/models"
+import { Settings } from "../domain/settings/models"
 import { ValidationError } from "../domain/settings/validation"
-import { VersionRequirements } from "./VersionRequirements"
+import { useSettings } from "../hooks/useSettings"
+import { Context } from "../utils/constants"
 import { AppSettingsJsonEditor } from "./AppSettingsJsonEditor"
 import { AppSettingsValidationErrors } from "./AppSettingsValidationErrors"
 import { HostConfigJsonEditor } from "./HostConfigJsonEditor"
 import { PanelsLauncher } from "./PanelsLauncher"
-import { Context } from "../utils/constants"
-import { Settings } from "../domain/settings/models"
+import { ThemeEditor } from "./ThemeEditor"
+import { VersionRequirements } from "./VersionRequirements"
 
 export enum NavContext {
-  Panels = "Panels",
-  AppSettings = "App settings",
-  HostConfig = "Host Configuration",
-  About = "About",
+  Panels = "🏄 Panels",
+  AppSettings = "🛠️ App settings",
+  Browsers = "🕸 Browsers",
+  Theme = "✨ Custom theme",
+  About = "📜 About",
 }
 
 export function SettingsView({
@@ -27,6 +31,9 @@ export function SettingsView({
   historyHandler,
   recentlyClosedTabsHandler,
   settingsHandler,
+  profiles,
+  currentProfile,
+  setProfiles,
 }: {
   restoreDefaults: () => void
   onBackToList: () => void
@@ -37,12 +44,13 @@ export function SettingsView({
   settingsHandler: () => Promise<void>
   showBackButton: boolean
   context: Context
+  profiles: ProfileItem[]
+  currentProfile: ProfileItem | undefined
+  setProfiles: React.Dispatch<React.SetStateAction<ProfileItem[]>>
 }) {
   const [navContext, setNavContext] = useState<NavContext>(NavContext.Panels)
   const { settings, setSettings } = useSettings()
-  const [validationErrors, setValidationErrors] = useState<
-    ValidationError[] | null
-  >(null)
+  const [validationErrors, setValidationErrors] = useState<ValidationError[] | null>(null)
 
   useEffect(() => {
     setNavContext(NavContext.Panels)
@@ -73,25 +81,21 @@ export function SettingsView({
             setValidationErrors={setValidationErrors}
           />
         )
-      case NavContext.HostConfig:
-        return <HostConfigJsonEditor settings={settings} />
+      case NavContext.Browsers:
+        return <HostConfigJsonEditor profiles={profiles} setProfiles={setProfiles} settings={settings} />
+      case NavContext.Theme:
+        return <ThemeEditor />
       case NavContext.About:
         return (
           <div>
-            <VersionRequirements
-              restoreDefaults={restoreDefaults}
-              webBrowser={settings.appSettings.web_browser}
-            />
+            <VersionRequirements restoreDefaults={restoreDefaults} currentProfile={currentProfile} />
           </div>
         )
     }
   }
 
   return validationErrors ? (
-    <AppSettingsValidationErrors
-      validationErrors={validationErrors}
-      onBack={() => setValidationErrors(null)}
-    />
+    <AppSettingsValidationErrors validationErrors={validationErrors} onBack={() => setValidationErrors(null)} />
   ) : (
     <>
       <div className="settingsView">
@@ -113,9 +117,7 @@ export function SettingsView({
               </li>
               <li
                 tabIndex={navContext === NavContext.AppSettings ? -1 : 0}
-                className={
-                  navContext === NavContext.AppSettings ? "active" : ""
-                }
+                className={navContext === NavContext.AppSettings ? "active" : ""}
                 onClick={() => setNavContext(NavContext.AppSettings)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -126,17 +128,30 @@ export function SettingsView({
                 {NavContext.AppSettings}
               </li>
               <li
-                tabIndex={navContext === NavContext.HostConfig ? -1 : 0}
-                className={navContext === NavContext.HostConfig ? "active" : ""}
-                onClick={() => setNavContext(NavContext.HostConfig)}
+                tabIndex={navContext === NavContext.Browsers ? -1 : 0}
+                className={navContext === NavContext.Browsers ? "active" : ""}
+                onClick={() => setNavContext(NavContext.Browsers)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    setNavContext(NavContext.HostConfig)
+                    setNavContext(NavContext.Browsers)
                   }
                 }}
               >
-                {NavContext.HostConfig}
+                {NavContext.Browsers}
               </li>
+              <li
+                tabIndex={navContext === NavContext.Theme ? -1 : 0}
+                className={navContext === NavContext.Theme ? "active" : ""}
+                onClick={() => setNavContext(NavContext.Theme)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setNavContext(NavContext.Theme)
+                  }
+                }}
+              >
+                {NavContext.Theme}
+              </li>
+
               <li
                 tabIndex={navContext === NavContext.About ? -1 : 0}
                 className={navContext === NavContext.About ? "active" : ""}

@@ -1,5 +1,3 @@
-import { logEmit } from "./logEmitter"
-
 type TrieNode = {
   children: Map<string, TrieNode>
   isWord: boolean
@@ -52,9 +50,7 @@ export class FolderIndex {
   constructor(public paths: string[]) {
     this.trie = new Trie()
     this.invertedIndex = new Map()
-    logEmit("building index")
     this.buildIndex(paths)
-    logEmit("built index")
   }
 
   private buildIndex(paths: string[]): void {

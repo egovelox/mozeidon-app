@@ -1,24 +1,36 @@
-import { useEffect, useState } from "react"
-import { Settings } from "../domain/settings/models"
-import { AUTO_CONFIGURED_BROWSERS } from "../utils/constants"
-import { NativeManifestJsonEditor } from "./NativeManifestJsonEditor"
-import { NativeManifestEditor } from "./NativeManifestEditor"
-import { getBrowserRedirectionCommand, getPlatform } from "../utils/getPlatform"
-import { switchToBrowserWindow } from "../actions/actions"
 import { invoke } from "@tauri-apps/api/core"
 import { emit } from "@tauri-apps/api/event"
+import { useEffect, useState } from "react"
 
-export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
-  const webBrowser = settings.appSettings.web_browser
+import { switchToBrowserWindow } from "../actions/actions"
+import { ProfileItem } from "../domain/profiles/models"
+import { Settings } from "../domain/settings/models"
+import { AUTO_CONFIGURED_BROWSERS } from "../utils/constants"
+import { getBrowserRedirectionCommand, getPlatform } from "../utils/getPlatform"
+import { sortProfiles } from "../utils/getStartingProfile"
+import { NativeManifestEditor } from "./NativeManifestEditor"
+import { NativeManifestJsonEditor } from "./NativeManifestJsonEditor"
+import { ProfileEditor } from "./ProfileEditor"
+import { ProfileRow } from "./ProfileRow"
+
+export function HostConfigJsonEditor({
+  settings,
+  profiles,
+  setProfiles,
+}: {
+  settings: Settings
+  profiles: ProfileItem[]
+  setProfiles: React.Dispatch<React.SetStateAction<ProfileItem[]>>
+}) {
   const manifests = settings.hostConfigurationSettings.browserManifests
-  const autoConfiguredManifests = manifests.filter(
-    (m) => m.content && AUTO_CONFIGURED_BROWSERS.includes(m.browser)
-  )
-  const userConfiguredManifests = manifests.filter(
-    (m) => !AUTO_CONFIGURED_BROWSERS.includes(m.browser)
-  )
+  const autoConfiguredManifests = manifests.filter((m) => m.content && AUTO_CONFIGURED_BROWSERS.includes(m.browser))
+  const userConfiguredManifests = settings.appSettings.custom_browser_manifests
 
-  const [showEditor, setShowEditor] = useState(false)
+  const [showNativeManifestEditor, setShowNativeManifestEditor] = useState(false)
+  const [showProfileEditor, setShowProfileEditor] = useState<{
+    isVisible: boolean
+    profile: ProfileItem | undefined
+  }>({ isVisible: false, profile: undefined })
   const platform = getPlatform()
   const isLinuxPlatform = platform === "linux"
   const [isWmctrlInstalled, setIsWmctrlInstalled] = useState(false)
@@ -35,140 +47,101 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
     }, [])
   }
 
-  const [displayBrowserRedirectionInfo, setDisplayBrowserRedirectionInfo] =
-    useState(false)
-  const [displayNativeManifestInfo, setDisplayNativeManifestInfo] =
-    useState(false)
+  const [displayProfilesInfo, setDisplayProfilesInfo] = useState(false)
+  const [displayNativeManifestInfo, setDisplayNativeManifestInfo] = useState(false)
 
-  return !showEditor ? (
+  return !showNativeManifestEditor && !showProfileEditor.isVisible ? (
     <div>
-      <div style={{ marginBottom: "1em" }}>
+      <div style={{ marginTop: "1.5em", marginBottom: "1em" }}>
         <span className="settingsTitle">
-          <b>Web-browser window redirection</b>
+          <b>Browsers & profiles</b>
         </span>
-        <span
-          className="moreInfo"
-          onClick={() =>
-            setDisplayBrowserRedirectionInfo((current) => !current)
-          }
-        >
+        <span className="moreInfo" onClick={() => setDisplayProfilesInfo((current) => !current)}>
           &nbsp;&nbsp;more info...
         </span>
-        <div
-          className={`mozeidonDocInfo ${
-            displayBrowserRedirectionInfo ? "visible" : ""
-          }`}
-        >
+        <div className={`mozeidonDocInfo ${displayProfilesInfo ? "visible" : ""}`}>
           <br />
-          A redirection happens when the panel redirects you to your browser
-          window.
-          <br />
-          E.g when you double-click a tab item in the Swell tabs panel.
+          Below is a list of profiles, each representing a web-browser instance currently connected to Swell.
           <br />
           <br />
-          Internally on your {platform} platform, this redirection is triggered
-          by a shell-command : <b>{getBrowserRedirectionCommand(platform)}</b>{" "}
-          <b className="mozeidonColor">{webBrowser}</b>
+          You might want to <span className="mozeidonColor">edit a profile</span> :
+          <br />
+          <br />- setting <b>an alias</b>,
+          <br />
+          &nbsp;&nbsp; - when you need to change the instance name, because Swell wasn't able to display it correctly
+          <br />
+          &nbsp;&nbsp; - or when you need to differentiate multiple instances of the same browser in Swell
+          <br />
+          &nbsp;&nbsp; e.g you want to use multiple Chrome browser-profiles simultaneously : then set an alias for each
+          profile.
+          <br />
+          &nbsp;&nbsp; e.g you want to use Firefox and another browser derived from Firefox ( let's say Zen )
+          <br />
+          &nbsp;&nbsp;&nbsp; but the default name is not correct : then just set the alias to the correct name ( Zen ).
+          <br />
+          <br />- setting <b>a command-alias</b>, when you need to make the switch-command work correctly.
+          <br />
+          <br />- setting <b>a higher priority</b>, when you need to start Swell with the profile of your choice.
+          <br />
+          <br />
+          Swell should automatically connect to each instance where the mozeidon browser-extension is active.
+          <br />
+          If you cannot find your instance in the list below, please ensure :
+          <br />
+          - the mozeidon browser-extension is active for this instance
+          <br />
+          - a native-manifest file exists for this instance ( see paragraph below )
+          <br />
+          <br />
         </div>
-
-        {isLinuxPlatform && !isWmctrlInstalled ? (
-          <div className="mozeidonDocInfo visible">
-            <br />
-            Currently, Swell cannot find a{" "}
-            <b className="mozeidonColor">wmctrl</b> command available on your
-            device.
-            <br />
-            <b className="mozeidonColor">Please install it first</b>, in order
-            to enable browser window redirection !
-          </div>
-        ) : (
-          <div className="mozeidonDocInfo visible">
-            <br />
-            Current redirection is set to the{" "}
-            <b className="mozeidonColor"> {webBrowser}</b> browser window.
-            <br />
-            By changing the <b>web_browser</b> value in App settings, you can
-            redirect to another browser.
-            <br />
-            <br />
-            You can use the button below to test the redirection.
-            <br />
-            Note that <b>redirection cannot work correctly</b> if your browser
-            has more than one opened window.
-            {isLinuxPlatform && (
-              <>
-                <br />
-                Note that <b>redirection cannot work</b> if your window-manager
-                has focus stealing prevention (e.g GNOME).
-              </>
-            )}
-            <br />
-            <br />
-            <button
-              id="checkBrowserRedirectionButton"
-              style={{ marginLeft: ".1em" }}
-              className="actionButton"
-              onClick={async () => {
-                await invoke("hide")
-                await switchToBrowserWindow(webBrowser)
-              }}
-            >
-              Check window redirection
-            </button>
-          </div>
-        )}
+        <div className="mozeidonDocInfo visible">
+          <br />
+          {sortProfiles(profiles).map((p) => (
+            <ProfileRow
+              key={p.profileId}
+              profile={p}
+              setProfiles={setProfiles}
+              setShowEditor={setShowProfileEditor}
+              platform={platform}
+            />
+          ))}
+        </div>
       </div>
       <div>
         <div style={{ paddingBottom: "2em" }}>
           <span className="settingsTitle">
             <b>Browsers & native-manifests</b>
           </span>
-          <span
-            className="moreInfo"
-            onClick={() => setDisplayNativeManifestInfo((current) => !current)}
-          >
+          <span className="moreInfo" onClick={() => setDisplayNativeManifestInfo((current) => !current)}>
             &nbsp;&nbsp;more info...
           </span>
-          <div
-            className={`mozeidonDocInfo ${
-              displayNativeManifestInfo ? "visible" : ""
-            }`}
-          >
-            <br />A <b>native manifest</b> is a web-browser configuration file
-            that must be stored in your file-system.
+          <div className={`mozeidonDocInfo ${displayNativeManifestInfo ? "visible" : ""}`}>
+            <br />A <b>native manifest</b> is a web-browser configuration file that must be stored in your file-system.
             <br />
             <br />
-            This file contains the registration of the{" "}
-            <b>native-messaging-host</b>,
+            This file contains the registration of the <b>native-messaging-host</b>,
             <br />
-            a program responsible for exchanging messages with the
-            browser-extension.
+            a program responsible for exchanging messages with the browser-extension.
             <br />
             <br />
-            If <b>Chrome</b>, <b>Edge</b> or <b>Firefox</b> browser is already
-            installed on your machine,
+            If <b>Chrome</b>, <b>Edge</b> or <b>Firefox</b> browser is already installed on your machine,
             <br />
             the native-manifest file should be automatically created by our app.
             <br />
             It should be visible in the list below.
             <br />
             <br />
-            To use <b>another browser</b>, you first need to find the correct
-            native-manifest location (where the file should be stored).
+            To use <b>another browser</b>, you first need to find the correct native-manifest location (where the file
+            should be stored).
             <br />
-            Then you can create the native-manifest file using the Add a new
-            native-manifest form ( see below ).
+            Then you can create the native-manifest file using the Add a new native-manifest form ( see below ).
             <br />
-            Or you can create the native-manifest file yourself in your
-            file-system.
+            Or you can create the native-manifest file yourself in your file-system.
           </div>
         </div>
         <div className="container">
           {autoConfiguredManifests.length === 0 ? (
-            <div>
-              No auto-configured native-manifest : could not discover Firefox,
-              Chrome or Edge browser.
-            </div>
+            <div>No auto-configured native-manifest : could not discover Firefox, Chrome or Edge browser.</div>
           ) : (
             <>
               <div className="rowWithMarginBottom" style={{ fontSize: ".8em" }}>
@@ -177,10 +150,7 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
                 </span>
               </div>
               {autoConfiguredManifests.map((m) => (
-                <NativeManifestJsonEditor
-                  manifest={m}
-                  key={m.path ?? m.browser}
-                />
+                <NativeManifestJsonEditor manifest={m} key={m.path ?? m.browser} />
               ))}
             </>
           )}
@@ -200,25 +170,37 @@ export function HostConfigJsonEditor({ settings }: { settings: Settings }) {
                 <b> • User-configured </b>
               </div>
             )}
-            <button
-              id="registerNewManifestButton"
-              className="actionButton"
-              onClick={() => setShowEditor(true)}
-            >
+          </div>
+          <div>
+            <button className="actionButton" onClick={() => setShowNativeManifestEditor(true)}>
               Add a native-manifest
             </button>
           </div>
           {userConfiguredManifests.map((m) => (
-            <NativeManifestJsonEditor manifest={m} key={m.path} />
+            <NativeManifestJsonEditor manifest={m} key={m.path} canBeDeleted />
           ))}
         </div>
       </div>
     </div>
   ) : (
-    <NativeManifestEditor
-      handleBackButtonClick={() => {
-        setShowEditor(false)
-      }}
-    />
+    <>
+      {showNativeManifestEditor && (
+        <NativeManifestEditor
+          handleBackButtonClick={() => {
+            setShowNativeManifestEditor(false)
+          }}
+        />
+      )}
+      {showProfileEditor.isVisible && (
+        <ProfileEditor
+          profiles={profiles}
+          setProfiles={setProfiles}
+          editedProfile={showProfileEditor.profile}
+          handleBackButtonClick={() => {
+            setShowProfileEditor({ isVisible: false, profile: undefined })
+          }}
+        />
+      )}
+    </>
   )
 }

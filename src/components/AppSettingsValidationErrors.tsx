@@ -19,20 +19,19 @@ export function AppSettingsValidationErrors({
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated with the value{" "}
-                  <b>{received}</b> you provided !
+                  ❌ <b>{settingName}</b> could not be validated with the value <b>{received}</b> you provided !
                 </div>
                 <div>
                   <h4>Global shortcuts rules</h4>
                   <ul>
                     <li>Modifiers and keys must be separated by +</li>
                     <li>
-                      All keys require one or two modifiers (in this order):
-                      Control, Meta or Command, Alt or Option, Super, Shift
+                      All keys require one or two modifiers (in this order): Control, Meta or Command, Alt or Option,
+                      Super, Shift
                     </li>
                     <li>
-                      Allowed keys without modifier: F1...F20, PageUp, PageDown,
-                      ArrowUp, ArrowDown, ArrowLeft, ArrowRight
+                      Allowed keys without modifier: F1...F20, PageUp, PageDown, ArrowUp, ArrowDown, ArrowLeft,
+                      ArrowRight
                     </li>
                   </ul>
                   <h4>Allowed shortcut examples:</h4>
@@ -52,20 +51,19 @@ export function AppSettingsValidationErrors({
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated with the value{" "}
-                  <b>{received}</b> you provided !
+                  ❌ <b>{settingName}</b> could not be validated with the value <b>{received}</b> you provided !
                 </div>
                 <div>
                   <h4>Global shortcuts rules</h4>
                   <ul>
                     <li>Modifiers or keys must all be separated by +</li>
                     <li>
-                      All keys require one or two modifiers (in this order):
-                      Control, Meta or Command, Alt or Option, Super, Shift
+                      All keys require one or two modifiers (in this order): Control, Meta or Command, Alt or Option,
+                      Super, Shift
                     </li>
                     <li>
-                      Allowed keys without a modifier: F1...F20, PageUp,
-                      PageDown, Delete, Insert, Home, End, CapsLock, NumLock
+                      Allowed keys without a modifier: F1...F20, PageUp, PageDown, Delete, Insert, Home, End, CapsLock,
+                      NumLock
                     </li>
                   </ul>
                   <h4>Allowed global shortcut examples:</h4>
@@ -95,8 +93,7 @@ export function AppSettingsValidationErrors({
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated with the value{" "}
-                  <b>{received}</b> you provided!
+                  ❌ <b>{settingName}</b> could not be validated with the value <b>{received}</b> you provided!
                 </div>
                 <div>
                   <h4>Web search url</h4>
@@ -121,8 +118,7 @@ export function AppSettingsValidationErrors({
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated with the value{" "}
-                  <b>{received}</b> you provided!
+                  ❌ <b>{settingName}</b> could not be validated with the value <b>{received}</b> you provided!
                 </div>
                 <div>
                   <h4>Locale</h4>
@@ -155,8 +151,7 @@ export function AppSettingsValidationErrors({
             return (
               <div key={settingName}>
                 <div>
-                  ❌ <b>{settingName}</b> could not be validated with the value{" "}
-                  <b>{received}</b> you provided!
+                  ❌ <b>{settingName}</b> could not be validated with the value <b>{received}</b> you provided!
                 </div>
                 <div>
                   <h4>Theme</h4>

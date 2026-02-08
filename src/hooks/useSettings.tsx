@@ -1,42 +1,19 @@
-import {
-  register,
-  isRegistered,
-  unregister,
-} from "@tauri-apps/plugin-global-shortcut"
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
-import {
-  fetchAppSettings,
-  saveAppSettings,
-  saveCustomBrowserManifests,
-} from "../domain/settings/storage"
-import {
-  GlobalShortcutsKey,
-  Settings,
-  defaultSettings,
-  getGlobalShortcuts,
-} from "../domain/settings/models"
 import { emit } from "@tauri-apps/api/event"
-import {
-  AUTO_CONFIGURED_BROWSERS,
-  INACTIVE_SHORTCUT_VALUE,
-} from "../utils/constants"
-import { applyTheme } from "../utils/applyTheme"
+import { register, isRegistered, unregister } from "@tauri-apps/plugin-global-shortcut"
+import React, { createContext, useContext, useEffect, useRef, useState } from "react"
+
 import { getBrowserManifests, getUserHomeDir } from "../actions/actions"
+import { GlobalShortcutsKey, Settings, defaultSettings, getGlobalShortcuts } from "../domain/settings/models"
+import { fetchAppSettings, saveAppSettings } from "../domain/settings/storage"
+import { applyCustomTheme, applyTheme } from "../utils/applyTheme"
+import { INACTIVE_SHORTCUT_VALUE } from "../utils/constants"
 
 type SettingsContextType = {
   settings: Settings
   setSettings: (settings: Settings) => void
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(
-  undefined
-)
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
 type SettingsProviderProps = {
   children: React.ReactNode
@@ -45,10 +22,7 @@ type SettingsProviderProps = {
   }
 }
 
-export const SettingsProvider: React.FC<SettingsProviderProps> = ({
-  children,
-  shortcutsHandlers,
-}) => {
+export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, shortcutsHandlers }) => {
   /* initialize settings to undefined */
   const [settings, setSettingsState] = useState<Settings | undefined>(undefined)
   const [isDirty, setIsDirty] = useState(false)
@@ -59,11 +33,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   useEffect(() => {
     fetchAppSettings()
       .then((fetched) => {
-        const appSettings = fetched
-          ? { ...defaultSettings, ...fetched }
-          : defaultSettings
+        const appSettings = fetched ? { ...defaultSettings, ...fetched } : defaultSettings
         //setSettingsState(newAppSettings)
-        applyTheme(appSettings.theme)
+        if (appSettings.custom_theme) {
+          applyCustomTheme(appSettings.custom_theme)
+        } else {
+          applyTheme(appSettings.theme)
+        }
         return appSettings
       })
       .then(async (appSettings) => ({
@@ -90,23 +66,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   // Save settings after the user changed them
   useEffect(() => {
     if (settings && isDirty) {
-      applyTheme(settings.appSettings.theme)
-      saveAppSettings(settings.appSettings)
-        .then(() => setShouldRegister(true))
-        .then(() =>
-          saveCustomBrowserManifests(
-            // TODO improve : m.path ( comming from rust backend ) can be undefined but should not be.
-            settings.hostConfigurationSettings.browserManifests
-              .filter(
-                (m) => m.path && !AUTO_CONFIGURED_BROWSERS.includes(m.browser)
-              )
-              .map((m) => ({
-                browserName: m.browser,
-                manifestRelativeDir: m.path!,
-              }))
-          )
-        )
-        .catch(() => {})
+      if (settings.appSettings.custom_theme) {
+        applyCustomTheme(settings.appSettings.custom_theme)
+      } else {
+        applyTheme(settings.appSettings.theme)
+      }
+      saveAppSettings(settings.appSettings).then(() => setShouldRegister(true))
     }
   }, [settings, isDirty])
 
@@ -119,12 +84,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
         const task = async () => {
           // 1. handle register
           if (globalShortcut !== INACTIVE_SHORTCUT_VALUE) {
-            if (
-              [
-                "global_shortcut_switch_last_visited_tab",
-                "global_shortcut_close_current_tab",
-              ].includes(key)
-            ) {
+            if (["global_shortcut_switch_last_visited_tab", "global_shortcut_close_current_tab"].includes(key)) {
               if (await isRegistered(globalShortcut)) {
                 await unregister(globalShortcut)
               }
@@ -145,9 +105,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
           // 2. handle unregister
           if (previousSettingsRef.current) {
             const k = key as GlobalShortcutsKey
-            const oldGlobalShortcuts = getGlobalShortcuts(
-              previousSettingsRef.current.appSettings
-            )
+            const oldGlobalShortcuts = getGlobalShortcuts(previousSettingsRef.current.appSettings)
             if (
               oldGlobalShortcuts[k] !== INACTIVE_SHORTCUT_VALUE &&
               globalShortcut !== oldGlobalShortcuts[k] &&
@@ -182,11 +140,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   // Don't render children until settings are loaded
   if (!settings) return null
 
-  return (
-    <SettingsContext.Provider value={{ settings, setSettings }}>
-      {children}
-    </SettingsContext.Provider>
-  )
+  return <SettingsContext.Provider value={{ settings, setSettings }}>{children}</SettingsContext.Provider>
 }
 
 export const useSettings = () => {

@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react"
+
 import { useSettings } from "../hooks/useSettings"
 import { FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
-import {
-  clearFaviconCache,
-  getFavicon,
-  setFavicon,
-} from "../utils/faviconCache"
+import { clearFaviconCache, getFavicon, setFavicon } from "../utils/faviconCache"
 import { TextSelector } from "./TextSelector"
 
 export interface WebSearchRowProps {
@@ -36,9 +33,7 @@ export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
     domain = new URL(item).hostname
   } catch {}
 
-  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() =>
-    getFavicon(domain)
-  )
+  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() => getFavicon(domain))
 
   useEffect(() => {
     if (settings.show_favicons) {
@@ -46,8 +41,7 @@ export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
         //const url = `https://icons.duckduckgo.com/ip3/${domain}.ico`
         const url = item.startsWith(FILE_PREFIX_URL)
           ? FILE_PREFIX_URL
-          : domain &&
-            `https://www.google.com/s2/favicons?sz=128&domain=${domain}`
+          : domain && `https://www.google.com/s2/favicons?sz=128&domain=${domain}`
         setFaviconUrl(url)
         setFavicon(domain, url)
       }
@@ -72,11 +66,7 @@ export const WebSearchRow = ({ index, style, data }: WebSearchRowProps) => {
             content="Search the Web"
             isRowSelected={isRowSelected}
           />
-          <TextSelector
-            className="liLine"
-            content={domain || data.items[index]}
-            isRowSelected={isRowSelected}
-          />
+          <TextSelector className="liLine" content={domain || data.items[index]} isRowSelected={isRowSelected} />
           <TextSelector
             className="liLineSmallFont"
             content={`${data.items[index]}${data.searchTerms.replaceAll(" ", "+")}`}

@@ -24,7 +24,7 @@
     ]
   },
   "productName": "swell",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "identifier": "com.egovelox.swell",
   "plugins": {},
   "app": {
@@ -33,7 +33,7 @@
         "label": "main",
         "title": "swell",
         "fullscreen": false,
-        "height": 480,
+        "height": 490,
         "width": 800,
         "resizable": false,
         "minimizable": false,

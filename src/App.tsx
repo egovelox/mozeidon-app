@@ -1,28 +1,8 @@
-import { Fragment, KeyboardEvent, useEffect, useRef, useState } from "react"
-import settingsLogo from "./assets/settings.svg"
-import searchExactIcon from "./assets/searchExact.svg"
-import searchFuzzyIcon from "./assets/searchFuzzy.svg"
-import webSearchIcon from "./assets/websearch.svg"
-import maximizeIcon from "./assets/maximize.svg"
 import md5 from "md5"
+import { Fragment, KeyboardEvent, useEffect, useRef, useState } from "react"
 import { FixedSizeList as List } from "react-window"
-import { invoke } from "@tauri-apps/api/core"
-import { listen } from "@tauri-apps/api/event"
+
 import "./App.css"
-import { BookmarkItem } from "./domain/bookmarks/models"
-import { BmFormElement } from "./domain/bookmarks/validation"
-import { AppSettings, Settings } from "./domain/settings/models"
-import { GroupItem, TabItem, TabsWithGroups } from "./domain/tabs/models"
-import { ListContainer } from "./components/List"
-import { WebSearchListContainer } from "./components/WebSearchListContainer"
-import { BookmarksEditor, EditRefs } from "./components/BookmarksEditor"
-import { SearchInput } from "./components/SearchInput"
-import { SettingsView } from "./components/SettingsView"
-import { ShortcutListenerContainer } from "./components/ShortcutListenerContainer"
-import { WindowShortcutListener } from "./components/WindowShortcutListener"
-import { useInit } from "./hooks/useInit"
-import { SettingsProvider } from "./hooks/useSettings"
-import { useNotification } from "./hooks/useUserNotification"
 import {
   createBookmarkAction,
   switchTabAction,
@@ -30,43 +10,78 @@ import {
   newGroupTab,
   closeTabAction,
 } from "./actions/actions"
-import { useListNavigation } from "./utils/itemsInViewPort"
-import { toggleSearchType, SearchType } from "./utils/searchHandler"
-import { Context, RowDisplay } from "./utils/constants"
-import { HistoryItem } from "./domain/history/models"
-import { Items } from "./domain/ItemModel"
-import { keyDownHandler } from "./utils/keyDownHandler"
-import { isErrorJsonString, numberWithSpaces } from "./utils/strings"
-import { didLoadItemsEffect } from "./hooks/effects/hasLoadedItems"
-import { UserNotification } from "./components/UserNotification"
-import { ActionButton } from "./components/ActionButton"
-import { getPreviousVisitedTabIndex } from "./utils/getOrderedTabs"
-import { VerticalActionsView } from "./components/VerticalActionsView"
-import { Error } from "./components/Error"
-import { insertTabGroups } from "./utils/tabGroups"
-import {
-  GroupTabEditor,
-  NewTabGroupFormContent,
-} from "./components/GroupTabEditor"
-import { FolderIndex } from "./utils/bookmarksFolderIndex"
-import {
-  fetchRecentlyClosedTabs,
-  fetchTabs,
-  fetchTabsWithGroups,
-} from "./actions/tabs"
 import { fetchBookmarks } from "./actions/bookmarks"
 import { fetchHistory } from "./actions/history"
+import { fetchProfiles } from "./actions/profiles"
+import { fetchRecentlyClosedTabs, fetchTabs, fetchTabsLatestFirst, fetchTabsWithGroups } from "./actions/tabs"
+import MaximizeIcon from "./assets/maximize.svg?react"
+import SearchExactIcon from "./assets/searchExact.svg?react"
+import SearchFuzzyIcon from "./assets/searchFuzzy.svg?react"
+import SettingsIcon from "./assets/settings.svg?react"
+import WebSearchIcon from "./assets/websearch.svg?react"
 import { ActionsRow } from "./components/ActionsRow"
+import { BookmarksEditor, EditRefs } from "./components/BookmarksEditor"
+import { Error } from "./components/Error"
+import { GroupTabEditor, NewTabGroupFormContent } from "./components/GroupTabEditor"
+import { ListContainer } from "./components/List"
+import { ProfileSelector } from "./components/ProfileSelector"
+import { SearchInput } from "./components/SearchInput"
+import { SettingsView } from "./components/SettingsView"
+import { ShortcutListenerContainer } from "./components/ShortcutListenerContainer"
+import { UserNotification } from "./components/UserNotification"
+import { VerticalActionsView } from "./components/VerticalActionsView"
+import { WebSearchListContainer } from "./components/WebSearchListContainer"
+import { WindowShortcutListener } from "./components/WindowShortcutListener"
+import { Items } from "./domain/ItemModel"
+import { BookmarkItem } from "./domain/bookmarks/models"
+import { BmFormElement } from "./domain/bookmarks/validation"
+import { HistoryItem } from "./domain/history/models"
+import { ProfileItem } from "./domain/profiles/models"
+import { AppSettings, Settings } from "./domain/settings/models"
+import { GroupItem, TabItem, TabsWithGroups, Window } from "./domain/tabs/models"
+import { setLastVisitedPosition } from "./hooks/effects/setLastVisitedPosition"
+import { useInit } from "./hooks/useInit"
+import { SettingsProvider } from "./hooks/useSettings"
+import { useNotification } from "./hooks/useUserNotification"
+import { FolderIndex } from "./utils/bookmarksFolderIndex"
+import { Context, RowDisplay } from "./utils/constants"
+import { getLastVisitedTabIndex, getPreviousVisitedTabIndex, getWindowTabsAndGroups } from "./utils/getOrderedTabs"
+import { getStartingProfile } from "./utils/getStartingProfile"
+import { useListNavigation } from "./utils/itemsInViewPort"
+import { keyDownHandler } from "./utils/keyDownHandler"
+import { toggleSearchType, SearchType } from "./utils/searchHandler"
+import { isErrorJsonString, numberWithSpaces } from "./utils/strings"
+import { insertTabGroups } from "./utils/tabGroups"
+import { pause } from "./utils/time"
+import { SwellUi } from "./utils/ui"
+import { Utils } from "./utils/utils"
 
 let bookmarksCachedItems: Items = []
-let bookmarksFolderIndex: FolderIndex
+let bookmarksFolderIndex: {
+  profile: ProfileItem | undefined
+  folders: FolderIndex
+} = { profile: undefined, folders: null! }
 let bookmarksCachedItemsHash = md5(JSON.stringify(bookmarksCachedItems))
+let isHandlerBusy = false
+
+const withHandlerLock = async <T,>(fn: () => Promise<T>): Promise<T | null> => {
+  if (isHandlerBusy) {
+    return null
+  }
+  isHandlerBusy = true
+  try {
+    return await fn()
+  } finally {
+    isHandlerBusy = false
+  }
+}
 
 window.DEBUG = true
 
 function App() {
   useInit()
   const { notify, userNotification } = useNotification()
+  const [receivedTabs, setReceivedTabs] = useState<TabsWithGroups>()
   const [context, setContext] = useState<Context>(Context.None)
   const [error, setError] = useState("")
   const [previousContext, setPreviousContext] = useState<Context>(Context.None)
@@ -75,6 +90,11 @@ function App() {
   const [baseItems, setBaseItems] = useState<Items>([])
   // on the opposite, a list where items can be filtered depending on searchTerms
   const [fuzzyItems, setFuzzyItems] = useState<Items>([])
+  const [profiles, setProfiles] = useState<ProfileItem[]>([])
+  const [currentProfile, setCurrentProfile] = useState<ProfileItem | undefined>()
+  const [windows, setWindows] = useState<Window[]>([])
+  const [currentWindow, setCurrentWindow] = useState<Window>()
+  const currentProfileRef = useRef(currentProfile)
   const [isLoading, setIsLoading] = useState(true)
   const [isSearchNotFound, setIsSearchNotFound] = useState(false)
   const [isUserWebSearch, setIsUserWebSearch] = useState(false)
@@ -82,25 +102,11 @@ function App() {
   const [searchTerms, setSearchTerms] = useState("")
   const [searchType, setSearchType] = useState<SearchType>(SearchType.Exact)
   const [selectedListIndex, setSelectedListIndex] = useState(0)
-  const [selectedWebSearchListIndex, setSelectedWebSearchListIndex] =
-    useState(0)
+  const [selectedWebSearchListIndex, setSelectedWebSearchListIndex] = useState(0)
   const [showEditionTab, setShowEditionTab] = useState(false)
   const [showGroupEditionTab, setShowGroupEditionTab] = useState(false)
   const editRefs = useRef<EditRefs>(null)
   const listRef = useRef<List>(null)
-
-  didLoadItemsEffect(
-    listRef,
-    baseItems as TabItem[],
-    groupItems,
-    context,
-    setSelectedListIndex,
-    setFuzzyItems,
-    setBaseItems,
-    setGroupItems,
-    rowDisplay,
-    { isLoading }
-  )
 
   const resetWindowMultiLine = () => {
     if (!listRef.current) return
@@ -133,6 +139,13 @@ function App() {
     setGroupItems([])
     setBaseItems([])
     setFuzzyItems([])
+    setProfiles([])
+    setWindows([])
+    setReceivedTabs(undefined)
+    /*
+     * currentProfile and currentWindow states
+     * are not always restored
+     */
   }
 
   function resetForPreviousContext() {
@@ -156,20 +169,20 @@ function App() {
    * - (macOS only) click outside of app
    */
   useEffect(() => {
-    listen<{ isVisible: boolean }>("toggle-visible", (event) => {
+    SwellUi.listenEvent((event) => {
       if (event.payload.isVisible) {
         /*
-         * here the SettingsView is shown when the user clicked OS menu-bar.
+         * Note that the SettingsView is shown when the user clicked the OS menu-bar.
          * We set previousContext to None
          * so the SettingsView will not show a Back button.
          * ( see showBackButton in SettingsView props )
          */
         setPreviousContext(Context.None)
         setContext(Context.Settings)
-        invoke("show")
+        SwellUi.show()
       } else {
         restoreDefaults()
-        invoke("hide")
+        SwellUi.hide()
       }
     })
   }, [])
@@ -188,6 +201,69 @@ function App() {
     isUserWebSearch
   )
 
+  // Effect to set position on last accessed tab when tabs Panel loads
+  useEffect(() => {
+    if (!listRef.current || !currentWindow || !receivedTabs || isLoading || context !== Context.Tabs) {
+      return
+    }
+    const { tabs, groupItems, groups } = getWindowTabsAndGroups({
+      currentWindow,
+      received: receivedTabs,
+    })
+    insertTabGroups(tabs, groups, groupItems)
+    setBaseItems(tabs)
+    setFuzzyItems(tabs)
+    setGroupItems(groupItems)
+    const setPositionOnLastAccessedTab = async () => {
+      const { index, changes } = await getLastVisitedTabIndex(currentProfile, tabs as TabItem[], groupItems)
+
+      if (!changes) {
+        setLastVisitedPosition(index, setSelectedListIndex, rowDisplay, listRef)
+      } else {
+        const { newList, newGroups } = changes
+        setFuzzyItems(newList)
+        setBaseItems(newList)
+        setGroupItems(newGroups)
+        setLastVisitedPosition(index, setSelectedListIndex, rowDisplay, listRef)
+      }
+
+      // then we can fetch bookmarks ( to get folders )
+      await getLazyBookmarks(currentProfile)
+    }
+    setPositionOnLastAccessedTab()
+  }, [isLoading])
+
+  useEffect(() => {
+    // when currentWindow is changed inside the currentProfile
+    if (!isLoading && context === Context.Tabs) {
+      tabsHandler()
+    }
+  }, [currentWindow])
+
+  useEffect(() => {
+    if (!isLoading) {
+      currentProfileRef.current = currentProfile
+      switch (context) {
+        case Context.Tabs:
+          tabsHandler()
+          break
+        case Context.Bookmarks:
+          bookmarksHandler()
+          break
+        case Context.History:
+          historyHandler()
+          break
+        case Context.RecentlyClosed:
+          recentlyClosedTabsHandler()
+          break
+        case Context.Settings:
+        case Context.None:
+        default:
+          break
+      }
+    }
+  }, [currentProfile])
+
   const countCurrentItems = () => {
     if (context === Context.Tabs) {
       let collapsedTabsCount = 0
@@ -197,15 +273,12 @@ function App() {
           .flatMap((g) => g.tabs)
           .filter((t) => t.type === "tab").length
       }
+      const f = fuzzyItems as TabItem[]
       if (searchTerms.length === 0) {
-        const count =
-          (fuzzyItems as TabItem[]).filter((t) => t.type === "tab").length +
-          collapsedTabsCount
+        const count = f.filter((t) => t.type === "tab").length + collapsedTabsCount
         return `${numberWithSpaces(Math.max(count, 0))} ${context} `
       } else {
-        const count = (fuzzyItems as TabItem[]).filter(
-          (t) => t.type === "tab"
-        ).length
+        const count = f.filter((t) => t.type === "tab").length
         return `${numberWithSpaces(Math.max(count, 0))} ${context} `
       }
     } else {
@@ -218,162 +291,197 @@ function App() {
     restoreDefaults()
     setPreviousContext(Context.None)
     setContext(Context.Settings)
-    await invoke("show")
+    await SwellUi.show()
+    await profilesHandler()
     setIsLoading(false)
   }
 
-  const tabsHandler = async () => {
+  /*
+   * This handler simply redirects to Settings without invoking profilesHandler(),
+   * allowing to access SettingsView when an error somehow happens.
+   */
+  const settingsSafeHandler = async () => {
     restoreDefaults()
-    setContext(Context.Tabs)
-    await invoke("show")
-    const { res, duration } = await fetchTabsWithGroups()
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else {
-      const received: TabsWithGroups = JSON.parse(res as string)
-      const groupItems: GroupItem[] = received.groups.map((g) => ({
-        ...g,
-        tabs: [],
-      }))
-      const tabs: TabItem[] = [
-        ...received.tabs.map((t) => {
-          const group = groupItems.find((g) => g.id === t.groupId)
-          return {
-            type: "tab" as const,
-            groupTitle: group ? group.title : undefined,
-            ...t,
-          }
-        }),
-      ]
-      insertTabGroups(tabs, received.groups, groupItems)
-      setBaseItems(tabs)
-      setFuzzyItems(tabs)
-      setGroupItems(groupItems)
-      notify(`took ${duration} ms`)
-      setIsLoading(false)
-      // for tabs to be bookmarked, we need a bookmarksFolderIndex
-      getLazyBookmarks()
+    setPreviousContext(Context.None)
+    setContext(Context.Settings)
+    await SwellUi.show()
+    setIsLoading(false)
+  }
+
+  const profilesHandler = async (): Promise<ProfileItem | undefined> => {
+    //setCurrentWindow(undefined)
+    const { res } = await fetchProfiles()
+    if (!Utils.handleError(res, setError)) {
+      const received: ProfileItem[] = Utils.jsonParse(res)
+      const startingProfile = getStartingProfile(currentProfileRef.current, received)
+      if (!startingProfile) {
+        const errorMessage = `Did not found any connected profile.`
+        setError(errorMessage)
+      } else {
+        setProfiles(received)
+        setCurrentProfile(startingProfile)
+        currentProfileRef.current = startingProfile
+        return startingProfile
+      }
     }
   }
 
-  const getLazyBookmarks = async () => {
-    if (!bookmarksFolderIndex) {
-      const { res } = await fetchBookmarks(bookmarksCachedItemsHash)
-      if (isErrorJsonString(res)) {
-        const error: { error: string } = JSON.parse(res as string)
-        setError(error.error)
-      } else {
-        const items: BookmarkItem[] = JSON.parse(res as string)
+  const tabsHandler = async () => {
+    await withHandlerLock(async () => {
+      restoreDefaults()
+      const profile = await profilesHandler()
+      await SwellUi.show()
+      setContext(Context.Tabs)
+      const { res, duration } = await fetchTabsWithGroups(profile)
+      if (!Utils.handleError(res, setError)) {
+        const received: TabsWithGroups = Utils.jsonParse(res)
+        const receivedCurrentWindow = received.windows.find((w) => w.isLastFocused)
+        setReceivedTabs(received)
+        setWindows(received.windows)
+        /*
+         * when the user changed window in the same profile,
+         * we keep the currentWindow state
+         */
+        if (!currentWindow) {
+          setCurrentWindow(receivedCurrentWindow)
+        }
+        notify(`✓ took ${duration} ms`)
+        /*
+         * Note: useEffect[currentWindow] will run once isLoading is set to false
+         * Caution: avoid fetch actions below it
+         * or this might create concurrency in mozeidon cli
+         * leading to weird behaviour
+         *
+         * pause 1ms to ensure that useEffect[currentWindow] is triggered
+         * after all other states above are set.
+         */
+        await pause(1)
+        setIsLoading(false)
+      }
+    })
+  }
+
+  const getLazyBookmarks = async (profile: ProfileItem | undefined) => {
+    /*
+     * this condition below allows to get bookmarks only if
+     * - the bookmarks folders are missing
+     * - the bookmarks of the current-profile are missing
+     */
+    if (!bookmarksFolderIndex.folders || bookmarksFolderIndex.profile?.profileId !== profile?.profileId) {
+      const { res } = await fetchBookmarks(bookmarksCachedItemsHash, profile)
+      if (!Utils.handleError(res, setError)) {
+        if (res === "bookmarks_synchronized") {
+          return
+        }
+        const items: BookmarkItem[] = Utils.jsonParse(res)
         bookmarksCachedItemsHash = md5(res as string)
         bookmarksCachedItems = items
-        bookmarksFolderIndex = new FolderIndex(items.map((i) => i.parent))
+        bookmarksFolderIndex = {
+          profile: profile,
+          folders: new FolderIndex(items.map((i) => i.parent)),
+        }
       }
     }
   }
 
   const historyHandler = async () => {
-    restoreDefaults()
-    setContext(Context.History)
-    await invoke("show")
-    const { res, duration } = await fetchHistory()
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else {
-      const items: HistoryItem[] = JSON.parse(res as string)
-      setBaseItems(items)
-      setFuzzyItems(items)
-      notify(`took ${duration} ms`)
-      setIsLoading(false)
-      // for history items to be bookmarked, we need a bookmarksFolderIndex
-      getLazyBookmarks()
-    }
+    await withHandlerLock(async () => {
+      restoreDefaults()
+      const profile = await profilesHandler()
+      setContext(Context.History)
+      await SwellUi.show()
+      const { res, duration } = await fetchHistory(profile)
+      if (!Utils.handleError(res, setError)) {
+        const items: HistoryItem[] = Utils.jsonParse(res)
+        setBaseItems(items)
+        setFuzzyItems(items)
+        notify(`✓ took ${duration} ms`)
+        setIsLoading(false)
+        await getLazyBookmarks(profile)
+      }
+    })
   }
 
   const recentlyClosedTabsHandler = async () => {
-    restoreDefaults()
-    /* show ui */
-    setContext(Context.RecentlyClosed)
-    await invoke("show")
-    const { res, duration } = await fetchRecentlyClosedTabs()
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else {
-      const items: TabItem[] = JSON.parse(res as string)
-      setBaseItems(items)
-      setFuzzyItems(items)
-      notify(`took ${duration} ms`)
-      setIsLoading(false)
-      // for recently-closed-tabs to be bookmarked, we need a bookmarksFolderIndex
-      getLazyBookmarks()
-    }
+    await withHandlerLock(async () => {
+      restoreDefaults()
+      const profile = await profilesHandler()
+      /* show ui */
+      setContext(Context.RecentlyClosed)
+      await SwellUi.show()
+      const { res, duration } = await fetchRecentlyClosedTabs(profile)
+      if (!Utils.handleError(res, setError)) {
+        const items: TabItem[] = Utils.jsonParse(res)
+        setBaseItems(items)
+        setFuzzyItems(items)
+        notify(`✓ took ${duration} ms`)
+        setIsLoading(false)
+        await getLazyBookmarks(profile)
+      }
+    })
   }
 
   const bookmarksHandler = async () => {
-    restoreDefaults()
-    /* show ui */
-    setContext(Context.Bookmarks)
-    await invoke("show")
-    const { res, duration } = await fetchBookmarks(bookmarksCachedItemsHash)
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else if (res === "bookmarks_synchronized") {
-      setBaseItems(bookmarksCachedItems)
-      setFuzzyItems(bookmarksCachedItems)
-      setIsLoading(false)
-      notify(`took ${duration} ms`)
-    } else {
-      const items: BookmarkItem[] = JSON.parse(res as string)
-      bookmarksCachedItemsHash = md5(res as string)
-      bookmarksCachedItems = items
-      bookmarksFolderIndex = new FolderIndex(items.map((i) => i.parent))
-      setBaseItems(bookmarksCachedItems)
-      setFuzzyItems(bookmarksCachedItems)
-      setIsLoading(false)
-      notify(`took ${duration} ms`)
-    }
+    await withHandlerLock(async () => {
+      restoreDefaults()
+      const profile = await profilesHandler()
+      /* show ui */
+      setContext(Context.Bookmarks)
+      await SwellUi.show()
+      const { res, duration } = await fetchBookmarks(bookmarksCachedItemsHash, profile)
+      if (!Utils.handleError(res, setError)) {
+        if (res === "bookmarks_synchronized") {
+          setBaseItems(bookmarksCachedItems)
+          setFuzzyItems(bookmarksCachedItems)
+          setIsLoading(false)
+          notify(`✓ took ${duration} ms`)
+        } else {
+          const items: BookmarkItem[] = Utils.jsonParse(res)
+          bookmarksCachedItemsHash = md5(res as string)
+          bookmarksCachedItems = items
+          bookmarksFolderIndex = {
+            profile: profile,
+            folders: new FolderIndex(items.map((i) => i.parent)),
+          }
+          setBaseItems(bookmarksCachedItems)
+          setFuzzyItems(bookmarksCachedItems)
+          setIsLoading(false)
+          notify(`✓ took ${duration} ms`)
+        }
+      }
+    })
   }
 
   const switchLastVisitedTabHandler = async (settings: Settings) => {
     /* First hide the panel if it's currently open */
-    invoke("hide")
+    SwellUi.hide()
+    const profile = await profilesHandler()
     restoreDefaults()
-    const { res } = await fetchTabs()
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else {
-      const items: TabItem[] = JSON.parse(res as string)
-      const lastVisitedTab =
-        items[getPreviousVisitedTabIndex(items as TabItem[])]
-      await switchTabAction(
-        `${lastVisitedTab.windowId}:${lastVisitedTab.id}`,
-        settings.appSettings.web_browser
-      )
+    const { res } = await fetchTabs(profile)
+    if (!Utils.handleError(res, setError)) {
+      const received: TabsWithGroups = Utils.jsonParse(res)
+      const receivedCurrentWindow = received.windows.find((w) => w.isLastFocused)
+      const currentWindowTabs = received.tabs.filter((t) => t.windowId === receivedCurrentWindow?.id)
+      const lastVisitedTab = currentWindowTabs[getPreviousVisitedTabIndex(currentWindowTabs as TabItem[])]
+      await switchTabAction(profile, `${lastVisitedTab.windowId}:${lastVisitedTab.id}`)
       restoreDefaults()
     }
   }
 
   const closeCurrentTabTabHandler = async (settings: Settings) => {
     /* First hide the panel if it's currently open */
-    invoke("hide")
+    SwellUi.hide()
     restoreDefaults()
-    const { res } = await fetchTabs()
-    if (isErrorJsonString(res)) {
-      const error: { error: string } = JSON.parse(res as string)
-      setError(error.error)
-    } else {
-      const items: TabItem[] = JSON.parse(res as string)
-      const currentTab = items.length ? items[0] : null
+    const profile = await profilesHandler()
+    const { res } = await fetchTabsLatestFirst(profile)
+    if (!Utils.handleError(res, setError)) {
+      const received: TabsWithGroups = Utils.jsonParse(res)
+      const receivedCurrentWindow = received.windows.find((w) => w.isLastFocused)
+      const currentWindowTabs = received.tabs.filter((t) => t.windowId === receivedCurrentWindow?.id)
+      const currentTab = currentWindowTabs.length ? currentWindowTabs[0] : null
       if (currentTab) {
-        await switchTabAction(
-          `${currentTab.windowId}:${currentTab.id}`,
-          settings.appSettings.web_browser
-        )
-        await closeTabAction(`${currentTab.windowId}:${currentTab.id}`)
+        await switchTabAction(profile, `${currentTab.windowId}:${currentTab.id}`)
+        await closeTabAction(profile, `${currentTab.windowId}:${currentTab.id}`)
       }
       restoreDefaults()
     }
@@ -382,7 +490,11 @@ function App() {
   /* Handle KeyDown : where in-app user keypresses are listened to */
   const handleKeyDown = (event: KeyboardEvent, settings: AppSettings) =>
     keyDownHandler({
+      listRef,
+      searchTerms,
       searchInputRef,
+      currentProfile,
+      rowDisplay,
       event,
       settings,
       context,
@@ -391,38 +503,30 @@ function App() {
       groupItems,
       showEditionTab,
       showGroupEditionTab,
-      isWebSearch: isSearchNotFound || isUserWebSearch,
       selectedListIndex,
       selectedWebSearchListIndex,
-      searchTerms,
+      isWebSearch: isSearchNotFound || isUserWebSearch,
       notify,
-      setShowEditionTab,
-      setSelectedListIndex,
-      setSelectedWebSearchListIndex,
       restoreDefaults,
       setFuzzyItems,
       setBaseItems,
       setGroupItems,
+      setShowEditionTab,
+      setSelectedListIndex,
+      setSelectedWebSearchListIndex,
     })
 
   /* Handle New Tab Group Form submit */
-  const handleNewTabGroupFormSubmit = async (
-    e: React.FormEvent<NewTabGroupFormContent>
-  ) => {
-    // Prevent the browser from reloading the page
+  const handleNewTabGroupFormSubmit = async (e: React.FormEvent<NewTabGroupFormContent>) => {
+    // Prevent the UI from reloading the page
     e.preventDefault()
     const { groupTitle, groupColor } = e.currentTarget.elements
     const tabList = baseItems as TabItem[]
     // spot the tab using fuzzyItems because user may have searched and filtered items.
     const tab = (fuzzyItems as TabItem[])[selectedListIndex]
     // retrieve the position in tabList
-    const tabListPosition = tabList.findIndex((t) => t.id === tab.id)
-    const newGroupId = await newGroupTab(
-      tab.id,
-      tab.windowId,
-      groupTitle.value,
-      groupColor.value
-    )
+    const tabListPosition = Utils.findIndex(tabList, tab.id)
+    const newGroupId = await newGroupTab(tab.id, tab.windowId, groupTitle.value, groupColor.value, currentProfile)
     if (isErrorJsonString(newGroupId)) {
       return
     }
@@ -476,26 +580,19 @@ function App() {
   }
 
   /* Handle Edit Bookmark Form submit */
-  const handleEditBookmarkFormSubmit = async (
-    e: React.FormEvent<BmFormElement>
-  ) => {
+  const handleEditBookmarkFormSubmit = async (e: React.FormEvent<BmFormElement>) => {
     // Prevent the browser from reloading the page
     e.preventDefault()
     const { title, url, folderPath } = e.currentTarget.elements
     if (context === Context.Tabs) {
-      await createBookmarkAction(title.value, url.value, folderPath.value)
+      await createBookmarkAction(title.value, url.value, folderPath.value, currentProfile)
       setShowEditionTab(false)
-      notify("Bookmark created")
+      notify("✓ bookmark created")
     }
 
     if (context === Context.Bookmarks) {
       const bookmarkId = (fuzzyItems as BookmarkItem[])[selectedListIndex].id
-      await updateBookmarkAction(
-        bookmarkId,
-        title.value,
-        url.value,
-        folderPath.value
-      )
+      await updateBookmarkAction(bookmarkId, title.value, url.value, folderPath.value)
       setShowEditionTab(false)
       const newItems = fuzzyItems.map((item) => {
         if (item.id === bookmarkId) {
@@ -510,7 +607,7 @@ function App() {
       })
 
       setFuzzyItems(newItems as BookmarkItem[])
-      notify("Bookmark updated")
+      notify("✓ bookmark updated")
     }
   }
 
@@ -547,10 +644,10 @@ function App() {
         <WindowShortcutListener
           closeWindowCallback={async () => {
             restoreDefaults()
-            await invoke("hide")
+            await SwellUi.hide()
           }}
         />
-        <Error error={error} redirectCallback={settingsHandler} />
+        <Error error={error} redirectCallback={settingsSafeHandler} />
       </SettingsProvider>
     )
   }
@@ -569,14 +666,17 @@ function App() {
       <WindowShortcutListener
         closeWindowCallback={async () => {
           restoreDefaults()
-          await invoke("hide")
+          await SwellUi.hide()
         }}
       />
       {context === Context.Settings ? (
         <SettingsView
-          restoreDefaults={restoreDefaults}
+          currentProfile={currentProfile}
+          profiles={profiles}
           context={context}
           showBackButton={previousContext !== Context.None}
+          setProfiles={setProfiles}
+          restoreDefaults={restoreDefaults}
           tabsHandler={tabsHandler}
           bookmarksHandler={bookmarksHandler}
           historyHandler={historyHandler}
@@ -600,23 +700,17 @@ function App() {
                       setContext(Context.Settings)
                     }}
                     actionName={`Go to settings`}
-                    image={settingsLogo}
+                    Icon={SettingsIcon}
                   />
                   <ActionsRow
                     action={async () => {
                       setSearchType(toggleSearchType(searchType))
-                      document.getElementById("searchInput")?.focus()
+                      Utils.focusSearchInput()
                     }}
                     actionName={
-                      searchType === SearchType.Exact
-                        ? `${SearchType.Exact} match`
-                        : `${SearchType.Fuzzy} match`
+                      searchType === SearchType.Exact ? `${SearchType.Exact} match` : `${SearchType.Fuzzy} match`
                     }
-                    image={
-                      searchType === SearchType.Exact
-                        ? searchExactIcon
-                        : searchFuzzyIcon
-                    }
+                    Icon={searchType === SearchType.Exact ? SearchExactIcon : SearchFuzzyIcon}
                   />
                   <ActionsRow
                     action={async () => {
@@ -633,59 +727,58 @@ function App() {
                         window.f = i - 1
                         window.l = i + 2
                       }
-                      document.getElementById("searchInput")?.focus()
+                      Utils.focusSearchInput()
                     }}
                     actionName="Toggle list layout"
-                    image={maximizeIcon}
+                    Icon={MaximizeIcon}
                   />
                   <ActionsRow
-                    image={webSearchIcon}
+                    Icon={WebSearchIcon}
+                    actionName={isUserWebSearch ? "back to list" : "open new tab via search-engine"}
+                    addClassName={isUserWebSearch ? "actionsButtonWebSearchActivated" : ""}
                     action={async () => {
                       setIsUserWebSearch((isUserWebSearch) => !isUserWebSearch)
-                      document.getElementById("searchInput")?.focus()
+                      Utils.focusSearchInput()
                     }}
-                    actionName="Toggle web search"
-                    addClassName={
-                      isUserWebSearch ? "actionsButtonWebSearchActivated" : ""
-                    }
                   />
                   <SearchInput
                     ref={searchInputRef}
+                    currentProfile={currentProfile}
                     groupItems={groupItems}
                     value={searchTerms}
-                    onChange={(e) => {
-                      setSearchTerms(e.currentTarget.value)
-                    }}
-                    setIsSearchNotFound={setIsSearchNotFound}
                     selectedListIndex={selectedListIndex}
                     searchType={searchType}
-                    setFuzzyItems={setFuzzyItems}
                     fuzzyItems={fuzzyItems}
-                    setSelectedListIndex={setSelectedListIndex}
                     searchTerms={searchTerms}
                     rowDisplay={rowDisplay}
                     context={context}
                     baseItems={baseItems}
+                    setIsSearchNotFound={setIsSearchNotFound}
+                    setFuzzyItems={setFuzzyItems}
+                    setSelectedListIndex={setSelectedListIndex}
+                    onChange={(e) => {
+                      setSearchTerms(e.currentTarget.value)
+                    }}
                   />
-                  <UserNotification userNotification={userNotification} />
-                  <ActionButton id="actionButtonContext" disabled>
-                    {countCurrentItems()}
-                    &#x2713;
-                  </ActionButton>
+                  <ProfileSelector
+                    profiles={profiles}
+                    currentProfile={currentProfile}
+                    windows={windows}
+                    currentWindow={currentWindow}
+                    setCurrentProfile={setCurrentProfile}
+                    setCurrentWindow={setCurrentWindow}
+                    currentItemsCount={countCurrentItems()}
+                  />
                   <VerticalActionsView
-                    setRowDisplay={setRowDisplay}
-                    rowDisplay={rowDisplay}
+                    context={context}
+                    currentProfile={currentProfile}
                     searchTerms={searchTerms}
                     isUserWebSearch={isUserWebSearch}
-                    setIsUserWebSearch={setIsUserWebSearch}
-                    context={context}
-                    setContext={setContext}
-                    setPreviousContext={setPreviousContext}
+                    selectedListIndex={selectedListIndex}
                     fuzzyItems={fuzzyItems}
                     baseItems={baseItems}
                     groupItems={groupItems}
                     setGroupItems={setGroupItems}
-                    selectedListIndex={selectedListIndex}
                     setFuzzyItems={setFuzzyItems}
                     setBaseItems={setBaseItems}
                     setSelectedListIndex={setSelectedListIndex}
@@ -697,59 +790,60 @@ function App() {
                   {
                     <ListContainer
                       searchInputRef={searchInputRef}
+                      currentProfile={currentProfile}
                       groupItems={groupItems}
-                      setGroupItems={setGroupItems}
                       rowDisplay={rowDisplay}
                       selectedListIndex={selectedListIndex}
                       fuzzyItems={fuzzyItems}
-                      setFuzzyItems={setFuzzyItems}
-                      setBaseItems={setBaseItems}
-                      setSelectedListIndex={setSelectedListIndex}
-                      setShowEditionTab={setShowEditionTab}
                       context={context}
                       listRef={listRef}
-                      restoreDefaults={restoreDefaults}
                       isSearchNotFound={isSearchNotFound}
                       isUserWebSearch={isUserWebSearch}
                       searchTerms={searchTerms}
+                      setFuzzyItems={setFuzzyItems}
+                      setBaseItems={setBaseItems}
+                      setGroupItems={setGroupItems}
+                      setSelectedListIndex={setSelectedListIndex}
+                      setShowEditionTab={setShowEditionTab}
+                      restoreDefaults={restoreDefaults}
                     />
                   }
                   {(isSearchNotFound || isUserWebSearch) && !isLoading && (
                     <WebSearchListContainer
+                      listRef={listRef}
                       rowDisplay={rowDisplay}
                       selectedWebSearchListIndex={selectedWebSearchListIndex}
                       searchTerms={searchTerms}
-                      setSelectedWebSearchListIndex={
-                        setSelectedWebSearchListIndex
-                      }
-                      listRef={listRef}
+                      setSelectedWebSearchListIndex={setSelectedWebSearchListIndex}
                     />
                   )}
                 </div>
+                <UserNotification userNotification={userNotification} />
               </div>
             )}
             {showEditionTab && (
               <BookmarksEditor
                 ref={editRefs}
+                selectedItem={fuzzyItems[selectedListIndex] as BookmarkItem}
+                bookmarksFolderIndex={bookmarksFolderIndex.folders}
                 onSubmit={handleEditBookmarkFormSubmit}
                 onBackToList={() => setShowEditionTab(false)}
-                selectedItem={fuzzyItems[selectedListIndex] as BookmarkItem}
-                bookmarksFolderIndex={bookmarksFolderIndex}
                 context={context}
               />
             )}
             {showGroupEditionTab && (
               <GroupTabEditor
-                onBackToList={() => setShowGroupEditionTab(false)}
+                currentProfile={currentProfile}
                 searchTerms={searchTerms}
-                setShowGroupEditionTab={setShowGroupEditionTab}
-                setSelectedListIndex={setSelectedListIndex}
                 selectedListIndex={selectedListIndex}
                 groupItems={groupItems}
+                baseItems={baseItems as TabItem[]}
+                fuzzyItems={fuzzyItems as TabItem[]}
+                onBackToList={() => setShowGroupEditionTab(false)}
+                setShowGroupEditionTab={setShowGroupEditionTab}
+                setSelectedListIndex={setSelectedListIndex}
                 setGroupItems={setGroupItems}
-                fuzzyItems={fuzzyItems}
                 setFuzzyItems={setFuzzyItems}
-                baseItems={baseItems}
                 setBaseItems={setBaseItems}
                 onSubmit={handleNewTabGroupFormSubmit}
               />

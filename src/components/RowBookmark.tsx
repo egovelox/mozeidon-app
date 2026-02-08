@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { BookmarkItem } from "../domain/bookmarks/models"
-import { FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
-import { TextSelector } from "./TextSelector"
-import {
-  clearFaviconCache,
-  getFavicon,
-  setFavicon,
-} from "../utils/faviconCache"
+
 import { openURLAction } from "../actions/actions"
-import { invoke } from "@tauri-apps/api/core"
+import { BookmarkItem } from "../domain/bookmarks/models"
 import { useSettings } from "../hooks/useSettings"
+import { FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
+import { clearFaviconCache, getFavicon, setFavicon } from "../utils/faviconCache"
+import { SwellUi } from "../utils/ui"
 import { RowProps } from "./RowProps"
+import { TextSelector } from "./TextSelector"
 
 export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
   /* Adding style attribute is very important here
@@ -27,9 +24,7 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
     domain = new URL(item.url).hostname
   } catch {}
 
-  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() =>
-    getFavicon(domain)
-  )
+  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() => getFavicon(domain))
 
   useEffect(() => {
     if (settings.show_favicons) {
@@ -80,9 +75,9 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
       clearTimeout(clickTimeout.current)
       clickTimeout.current = null
     }
-    openURLAction(item.url, settings.web_browser)
+    openURLAction(data.currentProfile, item.url)
     data.restoreDefaults()
-    await invoke("hide")
+    await SwellUi.hide()
   }
   useEffect(() => {
     return () => {
@@ -95,34 +90,13 @@ export const BookmarkRow = ({ index, style, data }: RowProps<BookmarkItem>) => {
   return (
     <div style={style} onClick={handleClick}>
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div
-          className={selectionClassName}
-          style={{ cursor: "default" }}
-          onDoubleClick={handleDoubleClick}
-        >
-          <TextSelector
-            faviconUrl={faviconUrl}
-            className="liFirstLine"
-            content={title}
-            isRowSelected={isRowSelected}
-          />
-          <TextSelector
-            className="liLineSmallFont"
-            content={url}
-            isRowSelected={isRowSelected}
-          />
-          <TextSelector
-            className="liLine"
-            content={parent}
-            isRowSelected={isRowSelected}
-          />
+        <div className={selectionClassName} style={{ cursor: "default" }} onDoubleClick={handleDoubleClick}>
+          <TextSelector faviconUrl={faviconUrl} className="liFirstLine" content={title} isRowSelected={isRowSelected} />
+          <TextSelector className="liLineSmallFont" content={url} isRowSelected={isRowSelected} />
+          <TextSelector className="liLine" content={parent} isRowSelected={isRowSelected} />
         </div>
       ) : (
-        <div
-          className={`${selectionClassName}`}
-          style={{ cursor: "default" }}
-          onDoubleClick={handleDoubleClick}
-        >
+        <div className={`${selectionClassName}`} style={{ cursor: "default" }} onDoubleClick={handleDoubleClick}>
           <TextSelector
             faviconUrl={faviconUrl}
             className={`liFirstLineSmall`}

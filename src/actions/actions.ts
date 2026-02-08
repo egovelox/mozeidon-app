@@ -1,6 +1,10 @@
-import { Command } from "@tauri-apps/plugin-shell"
-import { writeText } from "@tauri-apps/plugin-clipboard-manager"
 import { invoke } from "@tauri-apps/api/core"
+import { writeText } from "@tauri-apps/plugin-clipboard-manager"
+import { Command } from "@tauri-apps/plugin-shell"
+
+import { ProfileItem } from "../domain/profiles/models"
+import { BrowserManifest } from "../domain/settings/models"
+import { TabItem } from "../domain/tabs/models"
 import {
   CLOSE_TAB_COMMAND,
   Context,
@@ -15,32 +19,37 @@ import {
   UPDATE_TAB_COMMAND,
   UPDATE_TABGROUP_COMMAND,
 } from "../utils/constants"
-import { fetchCustomBrowserManifests } from "../domain/settings/storage"
-import { BrowserManifest } from "../domain/settings/models"
 import { getPlatform } from "../utils/getPlatform"
-import { TabItem } from "../domain/tabs/models"
+import { getProfileIdArg } from "./profiles"
 
-export async function openURLAction(url: string, browser: string) {
+export async function openURLAction(profile: ProfileItem | undefined, url: string) {
   await invoke("mozeidon", {
     context: Context.Tabs,
-    args: OPEN_NEW_TAB_COMMAND + ` ${url}`,
+    args: OPEN_NEW_TAB_COMMAND + getProfileIdArg(profile) + ` ${url}`,
   })
-  await switchToBrowserWindow(browser)
+  const profileBrowser = profile?.profileCommandAlias || profile?.profileName
+  if (profileBrowser) {
+    await switchToBrowserWindow(profileBrowser)
+  }
 }
 
 export async function copyUrlToClipboard(url: string) {
   await writeText(url)
 }
 
-export async function switchTabAction(itemId: string, browser: string) {
+export async function switchTabAction(profile: ProfileItem | undefined, itemId: string) {
   await invoke("mozeidon", {
     context: Context.Tabs,
-    args: SWITCH_TAB_COMMAND + " " + itemId,
+    args: SWITCH_TAB_COMMAND + getProfileIdArg(profile) + " " + itemId,
   })
-  await switchToBrowserWindow(browser)
+  const profileBrowser = profile?.profileCommandAlias || profile?.profileName
+  if (profileBrowser) {
+    await switchToBrowserWindow(profileBrowser)
+  }
 }
 
 export async function updateTabAction(
+  profile: ProfileItem | undefined,
   tabId: number,
   windowId: number,
   {
@@ -55,13 +64,7 @@ export async function updateTabAction(
     groupId?: number
   }
 ) {
-  const args = [
-    ...UPDATE_TAB_COMMAND.split(" "),
-    "-t",
-    `${tabId}`,
-    "-w",
-    `${windowId}`,
-  ]
+  const args = [...(UPDATE_TAB_COMMAND + getProfileIdArg(profile)).split(" "), "-t", `${tabId}`, "-w", `${windowId}`]
   if (tabIndex !== undefined) {
     args.push("-i")
     args.push(`${tabIndex}`)
@@ -79,9 +82,9 @@ export async function updateTabAction(
   await invoke("mozeidon_write", { args })
 }
 
-export async function duplicateTabAction(tab: TabItem): Promise<TabItem> {
+export async function duplicateTabAction(profile: ProfileItem | undefined, tab: TabItem): Promise<TabItem> {
   const args = [
-    ...DUPLICATE_TAB_COMMAND.split(" "),
+    ...(DUPLICATE_TAB_COMMAND + getProfileIdArg(profile)).split(" "),
     "-t",
     `${tab.id}`,
     "-w",
@@ -109,10 +112,10 @@ export async function switchToBrowserWindow(browser: string) {
   }
 }
 
-export async function closeTabAction(itemId: string) {
+export async function closeTabAction(profile: ProfileItem | undefined, itemId: string) {
   await invoke("mozeidon", {
     context: Context.Tabs,
-    args: CLOSE_TAB_COMMAND + " " + itemId,
+    args: CLOSE_TAB_COMMAND + getProfileIdArg(profile) + " " + itemId,
   })
 }
 
@@ -129,6 +132,7 @@ export async function deleteHistoryUrlAction(url: string) {
 }
 
 export async function updateTabGroupAction(
+  profile: ProfileItem | undefined,
   groupId: number,
   data: {
     title?: string
@@ -136,7 +140,7 @@ export async function updateTabGroupAction(
     collapsed?: boolean
   }
 ) {
-  const args = [...UPDATE_TABGROUP_COMMAND.split(" "), "-g", groupId.toString()]
+  const args = [...(UPDATE_TABGROUP_COMMAND + getProfileIdArg(profile)).split(" "), "-g", groupId.toString()]
   if (data.title) {
     args.push("-t")
     args.push(data.title)
@@ -151,9 +155,9 @@ export async function updateTabGroupAction(
   await invoke("mozeidon_write", { args })
 }
 
-export async function moveGroupAction(groupId: number, index: number) {
+export async function moveGroupAction(groupId: number, index: number, profile: ProfileItem | undefined) {
   const args = [
-    ...UPDATE_TABGROUP_COMMAND.split(" "),
+    ...(UPDATE_TABGROUP_COMMAND + getProfileIdArg(profile)).split(" "),
     "-g",
     groupId.toString(),
     "-i",
@@ -166,12 +170,13 @@ export async function newGroupTab(
   tabId: number,
   windowId: number,
   groupTitle: string,
-  groupColor: string
+  groupColor: string,
+  profile: ProfileItem | undefined
 ): Promise<string> {
   // will return a new groupId
   return await invoke("mozeidon_write", {
     args: [
-      ...NEW_TABGROUP_COMMAND.split(" "),
+      ...(NEW_TABGROUP_COMMAND + getProfileIdArg(profile)).split(" "),
       "-i",
       `${tabId}`,
       "-w",
@@ -187,47 +192,22 @@ export async function newGroupTab(
 export async function createBookmarkAction(
   title: string,
   url: string,
-  parent: string
+  parent: string,
+  profile: ProfileItem | undefined
 ) {
   await invoke("mozeidon_write", {
-    args: [
-      ...CREATE_BOOKMARK_COMMAND.split(" "),
-      "-t",
-      title,
-      "-u",
-      url,
-      "-f",
-      parent,
-    ],
+    args: [...(CREATE_BOOKMARK_COMMAND + getProfileIdArg(profile)).split(" "), "-t", title, "-u", url, "-f", parent],
   })
 }
 
-export async function updateBookmarkAction(
-  bookmarkId: string,
-  title: string,
-  url: string,
-  parent: string
-) {
+export async function updateBookmarkAction(bookmarkId: string, title: string, url: string, parent: string) {
   await invoke("mozeidon_write", {
-    args: [
-      ...UPDATE_BOOKMARK_COMMAND.split(" "),
-      bookmarkId,
-      "-t",
-      title,
-      "-u",
-      url,
-      "-f",
-      parent,
-    ],
+    args: [...UPDATE_BOOKMARK_COMMAND.split(" "), bookmarkId, "-t", title, "-u", url, "-f", parent],
   })
 }
 
 export async function getBrowserManifests(): Promise<BrowserManifest[]> {
-  let customManifests = await fetchCustomBrowserManifests()
-  let result: BrowserManifest[] = await invoke(
-    "get_browser_manifests",
-    customManifests.length ? { customManifests } : undefined
-  )
+  let result: BrowserManifest[] = await invoke("get_browser_manifests")
   return result
 }
 

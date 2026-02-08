@@ -1,20 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import {
-  FAVICON_PROVIDER_URL,
-  FILE_PREFIX_URL,
-  RowDisplay,
-} from "../utils/constants"
-import { TextSelector } from "./TextSelector"
-import {
-  clearFaviconCache,
-  getFavicon,
-  setFavicon,
-} from "../utils/faviconCache"
-import { useSettings } from "../hooks/useSettings"
+
 import { openURLAction } from "../actions/actions"
 import { HistoryItem } from "../domain/history/models"
-import { invoke } from "@tauri-apps/api/core"
+import { useSettings } from "../hooks/useSettings"
+import { FAVICON_PROVIDER_URL, FILE_PREFIX_URL, RowDisplay } from "../utils/constants"
+import { clearFaviconCache, getFavicon, setFavicon } from "../utils/faviconCache"
+import { SwellUi } from "../utils/ui"
 import { RowProps } from "./RowProps"
+import { TextSelector } from "./TextSelector"
 
 export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
   /* Adding style attribute is very important here
@@ -31,9 +24,7 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
     domain = new URL(item.url).hostname
   } catch {}
 
-  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() =>
-    getFavicon(domain)
-  )
+  const [faviconUrl, setFaviconUrl] = useState<string | undefined>(() => getFavicon(domain))
 
   useEffect(() => {
     if (settings.show_favicons) {
@@ -52,12 +43,8 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
   const title = data.items.map(({ title }) => title)[index]
   const visitCount = data.items.map(({ vc }) => vc)[index]
   const lastVisit = new Date(data.items.map(({ t }) => t)[index])
-  const lastVisitLocalDate = lastVisit.toLocaleDateString(
-    settings.date_locale || undefined
-  )
-  const lastVisitLocalTime = lastVisit.toLocaleTimeString(
-    settings.date_locale || undefined
-  )
+  const lastVisitLocalDate = lastVisit.toLocaleDateString(settings.date_locale || undefined)
+  const lastVisitLocalTime = lastVisit.toLocaleTimeString(settings.date_locale || undefined)
 
   /*
    * Because we use onClick to adjust the item in the list
@@ -92,9 +79,9 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
       clearTimeout(clickTimeout.current)
       clickTimeout.current = null
     }
-    openURLAction(item.url, settings.web_browser)
+    openURLAction(data.currentProfile, item.url)
     data.restoreDefaults()
-    await invoke("hide")
+    await SwellUi.hide()
   }
   useEffect(() => {
     return () => {
@@ -107,11 +94,7 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
   return (
     <div style={style} onClick={handleClick}>
       {rowDisplay === RowDisplay.MultiLine ? (
-        <div
-          className={selectionClassName}
-          style={{ cursor: "default" }}
-          onDoubleClick={handleDoubleClick}
-        >
+        <div className={selectionClassName} style={{ cursor: "default" }} onDoubleClick={handleDoubleClick}>
           <div>
             <TextSelector
               faviconUrl={faviconUrl}
@@ -120,11 +103,7 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
               isRowSelected={isRowSelected}
             />
           </div>
-          <TextSelector
-            className="liLineSmallFont"
-            content={url}
-            isRowSelected={isRowSelected}
-          />
+          <TextSelector className="liLineSmallFont" content={url} isRowSelected={isRowSelected} />
           <TextSelector
             className="liLine"
             content={`${lastVisitLocalDate}  ${lastVisitLocalTime} • visited ${visitCount} time${visitCount > 1 ? "s" : ""}`}
@@ -132,11 +111,7 @@ export const HistoryRow = ({ index, style, data }: RowProps<HistoryItem>) => {
           />
         </div>
       ) : (
-        <div
-          className={`${selectionClassName}`}
-          style={{ cursor: "default" }}
-          onDoubleClick={handleDoubleClick}
-        >
+        <div className={`${selectionClassName}`} style={{ cursor: "default" }} onDoubleClick={handleDoubleClick}>
           <TextSelector
             faviconUrl={faviconUrl}
             className={`liFirstLineSmall`}
