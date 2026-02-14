@@ -73,6 +73,33 @@ xattr -r -d com.apple.quarantine /Applications/swell.app/
 
 ✅ Swell works well on `X11` with e.g `Xfce` desktop.
 
+##### Ubuntu and Firefox sandbox 😬
+
+On Ubuntu, the Firefox ( snap or .deb ) version might not be able to execute the `/usr/bin/mozeidon-native-app`.
+
+To confirm it, check if you can notice something about `firefox` or `mozeidon-native-app` in :
+
+```swift
+  dmesg | grep DENIED
+```
+
+The simplest way to fix it :  
+
+use a .deb Firefox version ( not snap ) and configure `etc/apparmor.d/usr.bin.firefox` to allow this binary :
+
+```swift
+// add this line inside the profile block
+/usr/bin/mozeidon-native-app ixr,
+```
+and then reload `apparmor`:
+
+```swift
+sudo apparmor_parser -r /etc/apparmor.d/usr.bin.firefox
+```
+
+If you must use the snap Firefox version, surely you will have to move   
+the `/usr/bin/mozeidon-native-app` binary inside `~/snap/firefox/common/mozeidon-native-app`   
+and change the extension-manifest ( `~/.mozilla/native-messaging-hosts/mozeidon.json` ) to point to that binary.
 
 ## ⚙️ Swell settings
 
